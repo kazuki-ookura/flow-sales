@@ -25,6 +25,7 @@ export const leads = sqliteTable("leads", {
 			"RESEARCHED",
 			"PERSONALIZED",
 			"WAITING_APPROVAL",
+			"APPROVED",
 			"SENT",
 			"FAILED",
 		],
