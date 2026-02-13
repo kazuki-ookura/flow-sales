@@ -1,17 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 export class PersonalizationService {
-  private static ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+	private static ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-  /**
-   * リード情報とリサーチ結果に基づいてパーソナライズされたメールを生成します。
-   */
-  static async generateEmail(leadInfo: any, researchData: any) {
-    if (!this.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is missing");
+	/**
+	 * リード情報とリサーチ結果に基づいてパーソナライズされたメールを生成します。
+	 */
+	static async generateEmail(leadInfo: any, researchData: any) {
+		if (!PersonalizationService.ANTHROPIC_API_KEY)
+			throw new Error("ANTHROPIC_API_KEY is missing");
 
-    const anthropic = new Anthropic({ apiKey: this.ANTHROPIC_API_KEY });
-    
-    const prompt = `
+		const anthropic = new Anthropic({
+			apiKey: PersonalizationService.ANTHROPIC_API_KEY,
+		});
+
+		const prompt = `
       あなたは一流のエンジニア兼SDRです。名前は「大倉」です。
       「Launch Flow」というNext.jsベースのSaaSボイラープレート（Hono, Supabase, Stripe連携済み）を、エンジニアの立場から提案してください。
 
@@ -41,13 +44,13 @@ export class PersonalizationService {
       本文: [本文]
     `;
 
-    const response = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-latest",
-      max_tokens: 1000,
-      messages: [{ role: "user", content: prompt }],
-    });
+		const response = await anthropic.messages.create({
+			model: "claude-3-5-sonnet-latest",
+			max_tokens: 1000,
+			messages: [{ role: "user", content: prompt }],
+		});
 
-    // @ts-ignore
-    return response.content[0].text;
-  }
+		// @ts-expect-error
+		return response.content[0].text;
+	}
 }
