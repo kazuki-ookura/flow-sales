@@ -19,9 +19,9 @@ export class InstantlyService {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
+				Authorization: `Bearer ${InstantlyService.API_KEY}`,
 			},
 			body: JSON.stringify({
-				api_key: InstantlyService.API_KEY,
 				campaign_id: InstantlyService.CAMPAIGN_ID,
 				skip_if_in_workspace: true,
 				leads: [

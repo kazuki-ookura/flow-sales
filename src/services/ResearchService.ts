@@ -106,7 +106,7 @@ export class ResearchService {
 			apiKey: ResearchService.ANTHROPIC_API_KEY,
 		});
 		const response = await anthropic.messages.create({
-			model: "claude-3-5-sonnet-latest",
+			model: "claude-3-5-sonnet-20241022",
 			max_tokens: 1500,
 			system: `
         あなたは一流のセールスリサーチャー兼技術コンサルタントです。

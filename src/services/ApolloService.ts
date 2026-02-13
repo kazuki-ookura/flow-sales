@@ -26,22 +26,35 @@ export class ApolloService {
 		if (!ApolloService.API_KEY) throw new Error("APOLLO_API_KEY is missing");
 
 		try {
-			const response = await fetch(`${ApolloService.BASE_URL}/people/search`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					"Cache-Control": "no-cache",
-				},
-				body: JSON.stringify({
-					api_key: ApolloService.API_KEY,
-					person_titles: titles,
-					organization_num_employees_ranges: ["1,50"],
-					page: page,
-				}),
+			// 新しいエンドポイント mixed_people/api_search を使用
+			// また、クエリパラメータとして渡す必要がある
+			const params = new URLSearchParams({
+				api_key: ApolloService.API_KEY,
+				page: page.toString(),
+				per_page: "10",
 			});
 
+			// 配列系のパラメータを追加
+			for (const title of titles) {
+				params.append("person_titles[]", title);
+			}
+			params.append("person_locations[]", "Japan");
+			params.append("organization_num_employees_ranges[]", "1,50");
+
+			const response = await fetch(
+				`${ApolloService.BASE_URL}/mixed_people/api_search?${params.toString()}`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"Cache-Control": "no-cache",
+					},
+				},
+			);
+
 			if (!response.ok) {
-				throw new Error(`Apollo API Error: ${response.statusText}`);
+				const errorText = await response.text();
+				throw new Error(`Apollo API Error: ${response.status} ${errorText}`);
 			}
 
 			return (await response.json()) as { people: ApolloPerson[] };
