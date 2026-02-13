@@ -14,6 +14,7 @@
 	},
 	"scripts": {
 		"dev": "bun run src/index.ts",
+		"test": "bun test",
 		"test-flow": "bun run src/test-flow.ts",
 		"db:push": "bunx drizzle-kit push",
 		"lint": "biome lint .",
