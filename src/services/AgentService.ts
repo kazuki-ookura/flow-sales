@@ -154,9 +154,21 @@ export class AgentService {
 					fullContent: lead.crawledContent,
 				};
 
+				// 役職に応じてスタイルを選択
+				const jobTitle = (lead.jobTitle || "").toUpperCase();
+				const style =
+					jobTitle.includes("CTO") ||
+					jobTitle.includes("ENGINEER") ||
+					jobTitle.includes("DEV") ||
+					jobTitle.includes("TECH")
+						? "TECHNICAL"
+						: "BUSINESS";
+
+				console.log(`[Personalize] ${lead.email} (Style: ${style})`);
 				const email = await PersonalizationService.generateEmail(
 					lead,
 					researchData,
+					style,
 				);
 
 				const [updated] = await LeadService.updateLead(lead.id, {

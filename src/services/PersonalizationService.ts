@@ -6,7 +6,11 @@ export class PersonalizationService {
 	/**
 	 * リード情報とリサーチ結果に基づいてパーソナライズされたメールを生成します。
 	 */
-	static async generateEmail(leadInfo: any, researchData: any) {
+	static async generateEmail(
+		leadInfo: any,
+		researchData: any,
+		style: "TECHNICAL" | "BUSINESS" = "TECHNICAL",
+	) {
 		if (!PersonalizationService.ANTHROPIC_API_KEY)
 			throw new Error("ANTHROPIC_API_KEY is missing");
 
@@ -17,7 +21,12 @@ export class PersonalizationService {
 		const prompt = `
       あなたは、自らもスタートアップを立ち上げているシリアルアントレプレナー兼エンジニアです。
       名前は「大倉（Kazuki）」です。
-      「Launch Drive」というNext.js + Hono + Supabase + Stripeの爆速SaaSボイラープレートを、同じ立場のエンジニアとして提案してください。
+      「Launch Drive」というNext.js + Hono + Supabase + Stripeの爆速SaaSボイラープレートを、同じ立場のエンジニア/起業家として提案してください。
+
+      【送信スタイル】
+      今回のスタイル: ${style}
+      - TECHNICALを選択時: ${leadInfo.companyName} の技術スタック（${researchData.techStack}）やエンジニア文化に触れ、開発効率の課題に共感する。
+      - BUSINESSを選択時: ${researchData.recentNews} や事業成長（${researchData.businessSummary}）に触れ、市場投入速度（TTM）の最大化とROIの観点から提案する。
 
       【ターゲット情報】
       氏名: ${leadInfo.firstName} ${leadInfo.lastName} 様
@@ -33,11 +42,12 @@ export class PersonalizationService {
       【絶対に守るべきルール】
       1. AIっぽさを徹底的に排除する:
          - 「〜しております」を多用しない。「〜しています」「〜だと思っています」など、少し柔らかく。
-         - 「突然のご連絡失礼します」は厳禁。
+         - 「突然のご連絡失礼します」「お忙しい中恐縮ですが」は厳禁。
          - 「お役に立てれば幸いです」「ご検討いただけますと幸いです」などの定型表現を使わない。
+         - 挨拶は「${leadInfo.firstName}さん、こんにちは（または、はじめまして）」など、人間味のある形にする。
       2. 冒頭で「信頼」を勝ち取る:
          - 「${leadInfo.companyName}の${researchData.recentNews}を見まして、...」や「${researchData.techStack}を使われているのを見て...」など、100%個別に書いたことが伝わる一文から始める。
-      3. エンジニア同士の「対話」にする:
+      3. エンジニア/起業家同士の「対話」にする:
          - ${researchData.technicalPainPoints}について、「実は私も以前、同じ構成で苦労したことがありまして」のようなストーリーを適宜混ぜる。
       4. シンプルなCTA:
          - いきなりミーティングを組もうとせず、「エンジニア同士、情報交換だけでもできませんか？」や「もし興味があれば資料だけお送りします」といった低いハードルを設定する。

@@ -74,73 +74,112 @@ app.get("/run-now", async (c) => {
 app.get("/dashboard", async (c) => {
 	const waiting = await LeadService.getLeadsByStatus("WAITING_APPROVAL");
 	const fail = await LeadService.getLeadsByStatus("FAILED");
-	const stats = {
-		sent: await LeadService.getSentCountToday(),
-		waiting: waiting.length,
-		failed: fail.length,
-	};
+	const globalStats = await LeadService.getGlobalStats();
+	const sentToday = await LeadService.getSentCountToday();
 
 	return c.html(`
     <html>
       <head>
         <title>FlowSales Dashboard</title>
         <style>
-          body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+          body { font-family: sans-serif; padding: 20px; background: #f9f9f9; color: #333; }
           .container { max-width: 1000px; margin: auto; }
-          .lead-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #ffc107; shadow: 0 1px 3px rgba(0,0,0,0.1); }
+          .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+          .stat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+          .stat-value { font-size: 1.5em; font-weight: bold; color: #007bff; }
+          .stat-label { font-size: 0.8em; color: #666; text-transform: uppercase; }
+          .lead-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #ffc107; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
           .lead-card.failed { border-left-color: #dc3545; }
-          .email-preview { background: #eee; padding: 10px; border-radius: 4px; white-space: pre-wrap; font-size: 0.9em; margin: 10px 0; }
+          .email-preview { background: #f4f4f4; padding: 15px; border-radius: 4px; white-space: pre-wrap; font-size: 0.9em; margin: 10px 0; border: 1px solid #ddd; }
           .actions { display: flex; gap: 10px; }
-          .btn-approve { background: #28a745; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
-          .btn-reject { background: #dc3545; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
+          .btn-approve { background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+          .btn-reject { background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+          .nav { margin-bottom: 20px; }
         </style>
       </head>
       <body>
         <div class="container">
-          <h1>Dashboard</h1>
-          <p>Sent Today: <strong>${stats.sent}</strong> | Waiting: ${stats.waiting} | Failed: ${stats.failed}</p>
-          <a href="/">← Back to Control</a>
+          <div class="nav">
+            <a href="/">← Control Panel</a>
+          </div>
+          <h1>Operational Report</h1>
+          
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-value">${sentToday}</div>
+              <div class="stat-label">Sent Today</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${globalStats.SENT}</div>
+              <div class="stat-label">Total Sent</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${globalStats.WAITING_APPROVAL}</div>
+              <div class="stat-label">Waiting</div>
+            </div>
+            <div class="stat-card" style="border-top: 3px solid #dc3545;">
+              <div class="stat-value" style="color: #dc3545;">${globalStats.FAILED}</div>
+              <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${globalStats.TOTAL}</div>
+              <div class="stat-label">Gross Leads</div>
+            </div>
+          </div>
           
           <h2>Waiting for Approval (${waiting.length})</h2>
-          ${waiting
-						.map(
-							(l) => `
+          ${
+						waiting.length === 0
+							? "<p>No leads waiting for approval.</p>"
+							: waiting
+									.map(
+										(l) => `
             <div class="lead-card">
-              <strong>${l.firstName} ${l.lastName} (${l.companyName})</strong><br/>
-              <small>${l.email} | ${l.jobTitle}</small>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                  <strong>${l.firstName} ${l.lastName}</strong> | ${l.jobTitle}<br/>
+                  <span style="color: #666;">${l.companyName} (${l.email})</span>
+                </div>
+              </div>
               <div class="email-preview">${l.personalizedEmail}</div>
               <div class="actions">
-                <button class="btn-approve" onclick="approve('${l.id}')">Approve & Send</button>
-                <button class="btn-reject" onclick="reject('${l.id}')">Reject</button>
+                <button class="btn-approve" onclick="approve('${l.id}')">Approve & Send Now</button>
+                <button class="btn-reject" onclick="reject('${l.id}')">Discard Lead</button>
               </div>
             </div>
           `,
-						)
-						.join("")}
+									)
+									.join("")
+					}
 
-          <h2>Failed Leads (${fail.length})</h2>
-          ${fail
-						.map(
-							(l) => `
+          <h2>Recent Failures</h2>
+          ${
+						fail.length === 0
+							? "<p>No recent failures.</p>"
+							: fail
+									.slice(0, 10)
+									.map(
+										(l) => `
             <div class="lead-card failed">
               <strong>${l.email}</strong><br/>
-              <p style="color: red;">Error: ${l.errorLog}</p>
-              <button onclick="approve('${l.id}')" class="btn-approve">Retry</button>
+              <p style="color: #dc3545; font-size: 0.9em;"><strong>Error:</strong> ${l.errorLog}</p>
+              <button onclick="approve('${l.id}')" class="btn-approve" style="padding: 4px 10px; font-size: 0.8em;">Retry</button>
             </div>
           `,
-						)
-						.join("")}
+									)
+									.join("")
+					}
         </div>
         <script>
           async function approve(id) {
             if(!confirm('Approve and send this email?')) return;
-            await fetch('/approve/' + id, {method: 'POST'});
-            location.reload();
+            const res = await fetch('/approve/' + id, {method: 'POST'});
+            if(res.ok) location.reload();
           }
           async function reject(id) {
             if(!confirm('Reject this lead?')) return;
-            await fetch('/reject/' + id, {method: 'POST'});
-            location.reload();
+            const res = await fetch('/reject/' + id, {method: 'POST'});
+            if(res.ok) location.reload();
           }
         </script>
       </body>

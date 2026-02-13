@@ -34,10 +34,15 @@ export class LeadService {
 			| "RESEARCHED"
 			| "PERSONALIZED"
 			| "WAITING_APPROVAL"
+			| "APPROVED"
 			| "SENT"
 			| "FAILED",
 	) {
-		return await db.select().from(leads).where(eq(leads.status, status)).all();
+		return await db
+			.select()
+			.from(leads)
+			.where(sql`${leads.status} = ${status} AND ${leads.unsubscribed} = 0`)
+			.all();
 	}
 
 	/**
@@ -72,5 +77,39 @@ export class LeadService {
 			.get();
 
 		return result?.count || 0;
+	}
+
+	/**
+	 * 全体の集計データを取得します。
+	 */
+	static async getGlobalStats() {
+		const result = await db
+			.select({
+				status: leads.status,
+				count: sql<number>`count(*)`,
+			})
+			.from(leads)
+			.groupBy(leads.status)
+			.all();
+
+		const stats = {
+			TOTAL: 0,
+			PENDING: 0,
+			RESEARCHED: 0,
+			PERSONALIZED: 0,
+			WAITING_APPROVAL: 0,
+			APPROVED: 0,
+			SENT: 0,
+			FAILED: 0,
+		};
+
+		for (const row of result) {
+			if (row.status && row.status in stats) {
+				(stats as any)[row.status] = row.count;
+				stats.TOTAL += row.count;
+			}
+		}
+
+		return stats;
 	}
 }

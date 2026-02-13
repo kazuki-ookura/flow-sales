@@ -38,4 +38,5 @@ export const leads = sqliteTable("leads", {
 	updatedAt: integer("updated_at", { mode: "timestamp" }).default(
 		sql`(strftime('%s', 'now'))`,
 	),
+	unsubscribed: integer("unsubscribed", { mode: "boolean" }).default(false),
 });
