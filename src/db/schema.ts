@@ -12,9 +12,12 @@ export const leads = sqliteTable("leads", {
   website: text("website"),
   techStack: text("tech_stack"),
   researchSummary: text("research_summary"),
+  crawledContent: text("crawled_content"),
   personalizedEmail: text("personalized_email"),
-  status: text("status", { enum: ["PENDING", "RESEARCHED", "PERSONALIZED", "SENT", "FAILED"] }).default("PENDING"),
+  approvalStatus: text("approval_status", { enum: ["PENDING", "APPROVED", "REJECTED"] }).default("PENDING"),
+  status: text("status", { enum: ["PENDING", "RESEARCHED", "PERSONALIZED", "WAITING_APPROVAL", "SENT", "FAILED"] }).default("PENDING"),
   errorLog: text("error_log"),
+  sentAt: integer("sent_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
   updatedAt: integer("updated_at", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });

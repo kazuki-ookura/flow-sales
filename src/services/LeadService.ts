@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { leads } from "../db/schema";
-import { eq, or } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 
 export class LeadService {
   /**
@@ -27,9 +27,8 @@ export class LeadService {
 
   /**
    * 指定したステータスのリードを一覧取得します。
-   * @param status 'PENDING' | 'RESEARCHED' | 'PERSONALIZED' | 'SENT' | 'FAILED'
    */
-  static async getLeadsByStatus(status: "PENDING" | "RESEARCHED" | "PERSONALIZED" | "SENT" | "FAILED") {
+  static async getLeadsByStatus(status: "PENDING" | "RESEARCHED" | "PERSONALIZED" | "WAITING_APPROVAL" | "SENT" | "FAILED") {
     return await db.select().from(leads).where(eq(leads.status, status)).all();
   }
 
@@ -44,5 +43,21 @@ export class LeadService {
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(leads.id, id))
       .returning();
+  }
+
+  /**
+   * 今日送信されたリードの数を取得します。
+   */
+  static async getSentCountToday() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(leads)
+      .where(sql`${leads.status} = 'SENT' AND ${leads.sentAt} >= ${today.getTime() / 1000}`)
+      .get();
+
+    return result?.count || 0;
   }
 }

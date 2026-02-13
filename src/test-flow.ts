@@ -1,58 +1,61 @@
-import { ResearchService } from "./services/ResearchService";
-import { PersonalizationService } from "./services/PersonalizationService";
+import { AgentService } from "./services/AgentService";
+import { db } from "./db";
+import { leads } from "./db/schema";
+import { eq } from "drizzle-orm";
 
 /**
- * 簡易テストスクリプト
- * 実際のAPIキーがない場合でもロジックを確認できるようにモックデータを使用するオプションを含めます。
+ * 送信フローの検証テスト
+ * リサーチ → パーソナライズ → 承認待ちステータスへの遷移を確認します。
  */
 async function test() {
+  // テスト用の環境変数を設定
+  process.env.REQUIRE_APPROVAL = "true";
+  process.env.DAILY_SEND_LIMIT = "10";
+
   const sampleLead = {
-    firstName: "Taro",
-    lastName: "Yamada",
-    jobTitle: "CTO",
-    companyName: "Sample Tech Inc.",
-    website: "https://example.com", 
-    email: "taro@example.com"
+    first_name: "Test",
+    last_name: "User",
+    title: "CTO",
+    email: `test-${Date.now()}@example.com`,
+    website: "https://firecrawl.dev", // 実際に存在し、読み込みやすいURL
+    companyName: "Firecrawl Inc."
   };
 
   console.log("=== FlowSales Verification Test ===");
-  console.log(`Target: ${sampleLead.companyName} (${sampleLead.website})`);
+  console.log(`Target Email: ${sampleLead.email}`);
 
   try {
-    // 1. リサーチ (APIキーがない場合はスキップ)
-    console.log("\n[1] Researching (Firecrawl + Claude)...");
-    let researchResults;
-    
-    if (process.env.FIRECRAWL_API_KEY && process.env.ANTHROPIC_API_KEY) {
-      researchResults = await ResearchService.researchWebsite(sampleLead.website);
+    // ワークフローの実行 (単一リード)
+    console.log("\n[Step] Running AgentService.processSingleLead...");
+    await AgentService.processSingleLead(sampleLead);
+
+    // DBの状態を確認
+    const lead = await db
+      .select()
+      .from(leads)
+      .where(eq(leads.email, sampleLead.email))
+      .get();
+
+    if (lead) {
+      console.log("\n[Result] Lead found in DB:");
+      console.log(`- Status: ${lead.status}`);
+      console.log(`- Tech Stack: ${lead.techStack}`);
+      console.log(`- Personalized Email: ${lead.personalizedEmail?.substring(0, 50)}...`);
+      console.log(`- Crawled Content Length: ${lead.crawledContent?.length || 0} characters`);
+
+      if (lead.status === "WAITING_APPROVAL") {
+        console.log("\n✅ Success: Status is WAITING_APPROVAL as expected.");
+      } else {
+        console.log(`\n❌ Failed: Expected status WAITING_APPROVAL but got ${lead.status}`);
+      }
     } else {
-      console.log("⚠️ API Keys missing. Using mock research data.");
-      researchResults = {
-        techStack: "Next.js, Tailwind CSS, TypeScript",
-        businessSummary: "SaaS platform for marketing automation.",
-        painPoints: "Slow development cycles and manual deployment processes."
-      };
-    }
-    console.log("Research Summary:", researchResults);
-
-    // 2. パーソナライズ (APIキーがない場合はスキップ)
-    console.log("\n[2] Personalizing Email (Claude)...");
-    let draftEmail;
-    if (process.env.ANTHROPIC_API_KEY) {
-      draftEmail = await PersonalizationService.generateEmail(sampleLead, researchResults);
-    } else {
-      console.log("⚠️ API Key missing. Using mock email draft.");
-      draftEmail = `Subject: Quick question about ${sampleLead.companyName}'s development\n\nHi ${sampleLead.firstName},\n\nI noticed you're using ${researchResults.techStack}. We've built Launch Flow to solve ${researchResults.painPoints}...`;
+      console.log("\n❌ Failed: Lead not found in DB.");
     }
 
-    console.log("\n--- DRAFT EMAIL START ---");
-    console.log(draftEmail);
-    console.log("--- DRAFT EMAIL END ---\n");
-
-    console.log("Verification complete! The flow logic is working as expected.");
-    
   } catch (error) {
-    console.error("Test failed:", error);
+    console.error("\n❌ Test failed with error:", error);
+  } finally {
+    console.log("\nVerification complete.");
   }
 }
 

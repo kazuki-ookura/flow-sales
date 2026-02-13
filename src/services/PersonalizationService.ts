@@ -12,27 +12,33 @@ export class PersonalizationService {
     const anthropic = new Anthropic({ apiKey: this.ANTHROPIC_API_KEY });
     
     const prompt = `
-      あなたは一流のSDR（Sales Development Representative）です。
-      「Launch Flow」というNext.jsベースのSaaSボイラープレート（Hono, Supabase, Stripe連携済み）を以下のターゲットに提案してください。
+      あなたは一流のエンジニア兼SDRです。名前は「大倉」です。
+      「Launch Flow」というNext.jsベースのSaaSボイラープレート（Hono, Supabase, Stripe連携済み）を、エンジニアの立場から提案してください。
 
       【ターゲット情報】
       氏名: ${leadInfo.firstName} ${leadInfo.lastName}
       役職: ${leadInfo.jobTitle}
       会社名: ${leadInfo.companyName}
-      ウェブサイト: ${leadInfo.website}
       
       【リサーチ結果】
       技術スタック: ${researchData.techStack}
       ビジネス概要: ${researchData.businessSummary}
-      想定される課題: ${researchData.painPoints}
+      最新動向/課題: ${researchData.recentNews} / ${researchData.technicalPainPoints}
 
-      【目的】
-      相手の技術的背景（Next.jsを使っているか等）やビジネス課題に触れつつ、Launch Flowがどのように彼らの開発スピードを加速させ、工数を削減できるかを1:1で語りかけるトーンで書いてください。
-      
-      【制約】
-      - 件名と本文を作成してください。
-      - 売り込み臭を抑え、専門家同士の対話のような自然な日本語。
-      - 相手がNext.jsを使っている場合は特にそのメリット（型安全、エッジ配信等）に触れる。
+      【メール作成の指針】
+      1. 冒頭の挨拶を工夫する: 
+         「突然のご連絡失礼します」や「お世話になっております」といった定型文は絶対に避けてください。
+         リサーチ結果（${researchData.recentNews} や ${researchData.businessSummary}）に基づいた具体的な事実や、相手のサービスへの関心から書き始めてください。
+      2. エンジニアとしての共感:
+         同じ技術を扱うエンジニア（大倉）として、彼らが直面しているであろう技術的な課題（${researchData.technicalPainPoints}）に対する共感を伝えてください。
+      3. 自然な口語表現:
+         「ですので」を「なので」にするなど、堅苦しすぎない自然な日本語を使用してください。
+      4. Launch Flowの提案:
+         開発工数の削減や、技術選定の迷いを解消し、初期開発をブーストできる点を「エンジニア同士の会話」のようなトーンで提案してください。
+
+      【出力形式】
+      件名: [件名]
+      本文: [本文]
     `;
 
     const response = await anthropic.messages.create({
