@@ -8,11 +8,19 @@ import { AgentService } from "./services/AgentService";
  * リサーチ → パーソナライズ → 承認待ちステータスへの遷移を確認します。
  */
 async function test() {
+	// コマンドライン引数からドメインを取得 (例: bun src/test-flow.ts google.com)
+	const targetDomain = process.argv[2] || "firecrawl.dev";
+	const websiteUrl = targetDomain.startsWith("http")
+		? targetDomain
+		: `https://${targetDomain}`;
+
+	console.log(`\nTesting with domain: ${targetDomain}`);
+
 	// テスト用の環境変数を設定
 	process.env.REQUIRE_APPROVAL = "true";
 	process.env.DAILY_SEND_LIMIT = "10";
 
-	const targetEmail = `test-${Date.now()}@example.com`;
+	const targetEmail = `test-${Date.now()}@${targetDomain}`;
 	const sampleLead = {
 		first_name: "John",
 		last_name: "Doe",
@@ -21,8 +29,8 @@ async function test() {
 		email: targetEmail,
 		organization: {
 			name: "Test Corp",
-			website_url: "https://firecrawl.dev",
-			primary_domain: "firecrawl.dev",
+			website_url: websiteUrl,
+			primary_domain: targetDomain,
 		},
 	};
 
