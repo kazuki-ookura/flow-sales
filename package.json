@@ -13,9 +13,10 @@
 		"typescript": "^5.9.3"
 	},
 	"scripts": {
-		"dev": "bun run src/index.ts",
+		"dev": "concurrently \"bun dev-server\" \"bun dev-ui\"",
+		"dev-server": "bun run src/index.ts",
+		"dev-ui": "cd frontend && bun run dev",
 		"test": "bun test",
-		"test-flow": "bun run src/test-flow.ts",
 		"db:push": "bunx drizzle-kit push",
 		"lint": "biome lint .",
 		"format": "biome format --write .",
@@ -25,6 +26,7 @@
 	"dependencies": {
 		"@anthropic-ai/sdk": "^0.74.0",
 		"@libsql/client": "^0.17.0",
+		"concurrently": "^9.2.1",
 		"drizzle-orm": "^0.45.1",
 		"hono": "^4.11.9",
 		"uuid": "^11.0.0",

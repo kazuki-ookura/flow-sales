@@ -150,14 +150,15 @@ bun db:push
 bun test-flow
 ```
 
-### 6. Running the Server
+### 6. Running the System
 
 ```bash
 bun dev
 ```
 
-- `GET /`: ステータス確認
-- `GET /leads`: 送信済み・待機中のリード一覧表示
+- `GET /`: 管理コントロールパネル（Legacy）
+- `http://localhost:5173`: Svelte 5 ダッシュボード（最新・推奨）
+- `GET /api/data`: フロントエンド用データAPI
 
 ## 🤖 SDR Workflow Details
 

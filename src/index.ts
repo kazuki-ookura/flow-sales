@@ -32,25 +32,26 @@ app.get("/", (c) => {
       <head>
         <title>FlowSales Control</title>
         <style>
-          body { font-family: sans-serif; padding: 40px; line-height: 1.6; max-width: 800px; margin: auto; background: #f4f7f6; }
-          .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-          button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-          button:hover { background: #0056b3; }
+          body { font-family: sans-serif; padding: 40px; line-height: 1.6; max-width: 800px; margin: auto; background: #0f172a; color: #f8fafc; }
+          .card { background: #1e293b; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
+          button { background: #6366f1; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+          button:hover { background: #4f46e5; }
           .btn-secondary { background: #6c757d; }
           a { text-decoration: none; }
+          h1 { color: #fff; }
         </style>
       </head>
       <body>
         <h1>🚀 FlowSales AI SDR</h1>
         <div class="card">
-          <h3>Current Operations</h3>
-          <p>The system runs automatically every 12 hours.</p>
-          <button onclick="runNow()">Run Workflow Manually</button>
+          <h3>Svelte 5 Dashboard (New)</h3>
+          <p>Access the modernized dashboard built with Svelte 5.</p>
+          <a href="http://localhost:5173" target="_blank"><button>Open Svelte Dashboard</button></a>
         </div>
         <div class="card">
-          <h3>Lead Management</h3>
-          <p>Check and approve personalized emails before they are sent.</p>
-          <a href="/dashboard"><button class="btn-secondary">Open Dashboard</button></a>
+          <h3>Legacy Control</h3>
+          <p>The system runs automatically every 12 hours.</p>
+          <button onclick="runNow()">Run Workflow Manually</button>
         </div>
         <script>
           async function runNow() {
@@ -74,7 +75,26 @@ app.get("/run-now", async (c) => {
 });
 
 /**
- * 送信承認ダッシュボード
+ * ダッシュボード用データAPI
+ */
+app.get("/api/data", async (c) => {
+	const waiting = await LeadService.getLeadsByStatus("WAITING_APPROVAL");
+	const fail = await LeadService.getLeadsByStatus("FAILED");
+	const sent = await LeadService.getLeadsByStatus("SENT");
+	const globalStats = await LeadService.getGlobalStats();
+	const sentToday = await LeadService.getSentCountToday();
+
+	return c.json({
+		waiting,
+		fail,
+		sent,
+		globalStats,
+		sentToday,
+	});
+});
+
+/**
+ * 送信承認ダッシュボード (HTML - 移行期間用)
  */
 app.get("/dashboard", async (c) => {
 	const waiting = await LeadService.getLeadsByStatus("WAITING_APPROVAL");
