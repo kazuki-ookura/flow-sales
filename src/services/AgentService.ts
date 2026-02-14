@@ -4,6 +4,7 @@ import { LeadService } from "./LeadService";
 import { PersonalizationService } from "./PersonalizationService";
 import { ResearchService } from "./ResearchService";
 import { SlackService } from "./SlackService";
+import { ExclusionService } from "./ExclusionService";
 
 export class AgentService {
 	/**
@@ -97,6 +98,11 @@ export class AgentService {
 	private static async saveRawLead(rawLead: ApolloPerson) {
 		const email = rawLead.email;
 		if (!email) return;
+
+		if (ExclusionService.isExcluded(email)) {
+			console.log(`Lead skipped (Excluded Domain): ${email}`);
+			return;
+		}
 
 		const leadData = {
 			email,
