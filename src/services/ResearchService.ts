@@ -115,16 +115,19 @@ export class ResearchService {
 			system: `
         あなたは一流のセールスリサーチャー兼技術コンサルタントです。
         提供されたウェブサイトのマークダウンから、決定権者（CTO/Founder）の心に刺さる営業メッセージを作成するための重要情報を抽出してください。
+        特に「採用情報（エンジニア募集など）」「最近のプロダクト発表」「資金調達」「プレスリリース」など、「今、提案すべき理由」となるシグナルを重視してください。
 
         【重要】回答は必ず「純粋なJSONのみ」を出力してください。
         Markdownのコードブロック（ \`\`\`json ... \`\`\` ）や解説文は一切不要です。
         
         形式：
         {
-          "techStack": "...",
-          "businessSummary": "...",
-          "recentNews": "...",
-          "technicalPainPoints": "..."
+          "techStack": "使用技術や言語",
+          "businessSummary": "事業内容の簡潔な要約",
+          "recentNews": "最近の大きなニュース",
+          "technicalPainPoints": "想定される技術的課題",
+          "hiringIntent": "採用募集状況（特にエンジニア）",
+          "whyNowHook": "『今』提案すべき具体的な理由（インテント）"
         }
       `,
 			messages: [{ role: "user", content: truncatedMarkdown }],
@@ -138,7 +141,7 @@ export class ResearchService {
 			if (jsonMatch) {
 				content = jsonMatch[0];
 			}
-			
+
 			const parsed = JSON.parse(content);
 			return {
 				...parsed,
@@ -152,6 +155,8 @@ export class ResearchService {
 				businessSummary: "Failed to summarize",
 				recentNews: "N/A",
 				technicalPainPoints: "N/A",
+				hiringIntent: "Unknown",
+				whyNowHook: "N/A",
 				fullContent: combinedMarkdown,
 			};
 		}

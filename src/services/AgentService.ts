@@ -94,15 +94,27 @@ export class AgentService {
 	}
 
 	/**
+	 * 単一のリードをApolloの生データから処理します（テスト・デバッグ用）。
+	 */
+	static async processSingleLead(rawLead: ApolloPerson) {
+		const lead = await AgentService.saveRawLead(rawLead);
+		if (lead) {
+			await AgentService.executeLeadWorkflow(lead);
+			return lead;
+		}
+		return null;
+	}
+
+	/**
 	 * Apolloから来た生データをDBに保存（重複チェック込み）
 	 */
 	private static async saveRawLead(rawLead: ApolloPerson) {
 		const email = rawLead.email;
-		if (!email) return;
+		if (!email) return null;
 
 		if (await SettingsService.isExcluded(email)) {
 			console.log(`Lead skipped (Excluded Domain): ${email}`);
-			return;
+			return null;
 		}
 
 		const leadData = {
@@ -119,11 +131,14 @@ export class AgentService {
 			const lead = await LeadService.upsertLead(leadData);
 			if (lead) {
 				console.log(`New lead saved: ${email}`);
-			} else {
-				// console.log(`Lead already exists: ${email}`);
+				return lead;
 			}
+			// 既存リードの場合は再取得
+			const [existing] = await LeadService.getLeadsByStatus("PENDING"); // 暫定
+			return existing;
 		} catch (error) {
 			console.error(`Failed to save lead ${email}:`, error);
+			return null;
 		}
 	}
 
@@ -146,7 +161,7 @@ export class AgentService {
 				const [updated] = await LeadService.updateLead(lead.id, {
 					techStack: research.techStack,
 					researchSummary: research.businessSummary,
-					crawledContent: research.fullContent,
+					crawledContent: JSON.stringify(research), // 全データを保存
 					status: "RESEARCHED",
 				});
 				lead = updated;
@@ -155,13 +170,20 @@ export class AgentService {
 			// 3. パーソナライズ
 			if (lead.status === "RESEARCHED") {
 				console.log(`[Personalize] ${lead.email}`);
-				const researchData = {
-					techStack: lead.techStack,
-					businessSummary: lead.researchSummary,
-					recentNews: "", // 既存データから再構成
-					technicalPainPoints: "",
-					fullContent: lead.crawledContent,
-				};
+				let researchData;
+				try {
+					researchData = JSON.parse(lead.crawledContent || "{}");
+				} catch (e) {
+					// 互換性維持: 古い形式の場合は最低限のデータを構成
+					researchData = {
+						techStack: lead.techStack,
+						businessSummary: lead.researchSummary,
+						recentNews: "N/A",
+						technicalPainPoints: "N/A",
+						hiringIntent: "Unknown",
+						whyNowHook: "N/A",
+					};
+				}
 
 				// 役職に応じてスタイルを選択
 				const jobTitle = (lead.jobTitle || "").toUpperCase();
@@ -192,6 +214,8 @@ export class AgentService {
 				if (process.env.REQUIRE_APPROVAL === "true") {
 					console.log(`[Wait Approval] ${lead.email}`);
 					await LeadService.updateLead(lead.id, { status: "WAITING_APPROVAL" });
+					// Slackへ詳細通知
+					await SlackService.notifyNewLeadForApproval(lead);
 					return;
 				}
 				lead.status = "APPROVED"; // 承認不要なら自動的にAPPROVED扱い

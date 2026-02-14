@@ -13,6 +13,8 @@ Default to using Bun instead of Node.js.
 - Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
 - Use `bunx <package> <command>` instead of `npx <package> <command>`
 - Bun automatically loads .env, so don't use dotenv.
+- 全てのアーティファクト（Implementation Plan, Walkthrough, 等）およびテクニカルドキュメントは、日本語で作成してください。
+- ファイルやディレクトリ、関数名、クラス名などを参照する際は、バッククォート（` `）で囲み、可能な限りリンク（[file.ts](file:///path/to/file.ts)）を併用してください。
 
 ## APIs
 

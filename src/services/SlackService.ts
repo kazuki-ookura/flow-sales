@@ -36,4 +36,63 @@ export class SlackService {
 			console.error("Failed to send Slack error notification:", e);
 		}
 	}
+
+	static async notifyNewLeadForApproval(lead: any) {
+		if (!SlackService.WEBHOOK_URL) return;
+
+		const blocks = [
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: `🆕 *New Lead Personalized & Waiting Approval*\n*${lead.firstName} ${lead.lastName}* (${lead.jobTitle}) at *${lead.companyName}*`,
+				},
+			},
+			{
+				type: "section",
+				fields: [
+					{
+						type: "mrkdwn",
+						text: `*Tech Stack:*\n${lead.techStack || "N/A"}`,
+					},
+					{
+						type: "mrkdwn",
+						text: `*Website:*\n<${lead.website}|${lead.website}>`,
+					},
+				],
+			},
+			{
+				type: "section",
+				text: {
+					type: "mrkdwn",
+					text: `*Research Summary:*\n${lead.researchSummary || "N/A"}`,
+				},
+			},
+			{
+				type: "actions",
+				elements: [
+					{
+						type: "button",
+						text: {
+							type: "plain_text",
+							text: "View in Dashboard",
+							emoji: true,
+						},
+						url: `${process.env.APP_URL || "http://localhost:3000"}/dashboard`,
+						style: "primary",
+					},
+				],
+			},
+		];
+
+		try {
+			await fetch(SlackService.WEBHOOK_URL, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ blocks }),
+			});
+		} catch (e) {
+			console.error("Failed to send Slack lead notification:", e);
+		}
+	}
 }

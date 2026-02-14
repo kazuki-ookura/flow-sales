@@ -35,10 +35,12 @@ export class PersonalizationService {
       役職: ${leadInfo.jobTitle}
       会社名: ${leadInfo.companyName}
       
-      【リサーチ結果をフル活用してください】
+      【リサーチ結果（インテントデータを最優先に！）】
+      なぜ今なのか（最重要）: ${researchData.whyNowHook}
+      採用募集状況: ${researchData.hiringIntent}
+      最新ニュース: ${researchData.recentNews}
       技術スタック: ${researchData.techStack}
-      ビジネスの本質: ${researchData.businessSummary}
-      注目トピック: ${researchData.recentNews}
+      ビジネス要約: ${researchData.businessSummary}
       推測される課題: ${researchData.technicalPainPoints}
 
       【絶対に守るべきルール】
@@ -48,7 +50,8 @@ export class PersonalizationService {
          - 「お役に立てれば幸いです」「ご検討いただけますと幸いです」などの定型表現を使わない。
          - 挨拶は「${leadInfo.firstName}さん、こんにちは（または、はじめまして）」など、人間味のある形にする。
       2. 冒頭で「信頼」を勝ち取る:
-         - 「${leadInfo.companyName}の${researchData.recentNews}を見まして、...」や「${researchData.techStack}を使われているのを見て...」など、100%個別に書いたことが伝わる一文から始める。
+         - 冒頭の一文は必ず、${researchData.whyNowHook} や ${researchData.hiringIntent}、${researchData.recentNews} に基づいた「今、あなたに連絡した具体的かつ個人的な理由」から始めてください。
+         - 例: 「${leadInfo.companyName}さんのエンジニア採用の募集を拝見し、...」や「${researchData.recentNews}のリリース、おめでとうございます！」など。
       3. エンジニア/起業家同士の「対話」にする:
          - ${researchData.technicalPainPoints}について、「実は私も以前、同じ構成で苦労したことがありまして」のようなストーリーを適宜混ぜる。
       4. シンプルなCTA:
