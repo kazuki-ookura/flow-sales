@@ -23,6 +23,8 @@ The system is built with a modular service-oriented architecture.
 - **PersonalizationService:** Uses Claude 3.5 Sonnet to generate highly targeted 1:1 emails based on research data.
 - **InstantlyService:** Pushes personalized leads into Instantly.ai campaigns.
 - **AgentService (Orchestrator):** Manages the end-to-end workflow and handles retries/error logic.
+- **ExclusionService:** Filters leads based on email domains (e.g., excludes free mail or competitors).
+- **SlackService:** Provides real-time notifications for approval queues and system errors.
 
 ## 4. Data Model (Drizzle ORM)
 

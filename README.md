@@ -33,7 +33,10 @@ src/
 │   ├── PersonalizationService.ts # Email generation (Claude)
 │   ├── InstantlyService.ts  # Outreach automation
 │   ├── LeadService.ts     # Data management (CRUD)
-│   └── AgentService.ts    # Main orchestrator
+│   ├── AgentService.ts    # Main orchestrator
+│   ├── ExclusionService.ts # Domain-based filtering
+│   ├── SlackService.ts     # Error & status notifications
+│   └── SettingsService.ts  # Application settings management
 ├── routes/          # Express-like API routes
 ├── index.ts         # Hono server entry point
 └── test-flow.ts     # Logic verification script
@@ -75,8 +78,11 @@ cp .env.example .env
 | 変数名 | デフォルト | 説明 |
 |---|---|---|
 | `DAILY_SEND_LIMIT` | `50` | 1日の最大送信数 |
-| `REQUIRE_APPROVAL` | `false` | `true` にすると送信前に承認待ち（`WAITING_APPROVAL`）で停止 |
+| `REQUIRE_APPROVAL` | `true` | `true` にすると送信前に承認待ち（`WAITING_APPROVAL`）で停止 |
 | `DATABASE_URL` | `file:sqlite.db` | SQLiteデータベースのパス |
+| `EXCLUDED_DOMAINS` | - | 除外するドメイン（カンマ区切り。例: `gmail.com,example.com`） |
+| `SLACK_WEBHOOK_URL` | - | Slack通知用のWebhook URL |
+| `APP_URL` | `http://localhost:3000` | 通知等で使用するアプリケーションのベースURL |
 
 #### 各APIキーの取得手順
 
