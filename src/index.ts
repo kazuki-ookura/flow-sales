@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { AgentService } from "./services/AgentService";
 import { LeadService } from "./services/LeadService";
+import { SettingsService } from "./services/SettingsService";
 
 const app = new Hono();
 app.use("*", logger());
@@ -91,6 +92,20 @@ app.get("/api/data", async (c) => {
 		globalStats,
 		sentToday,
 	});
+});
+
+/**
+ * 設定取得・更新用API
+ */
+app.get("/api/settings", async (c) => {
+	const excludedDomains = await SettingsService.getSetting("EXCLUDED_DOMAINS");
+	return c.json({ excludedDomains: excludedDomains || "" });
+});
+
+app.post("/api/settings", async (c) => {
+	const { excludedDomains } = await c.req.json();
+	await SettingsService.updateSetting("EXCLUDED_DOMAINS", excludedDomains);
+	return c.json({ success: true });
 });
 
 /**

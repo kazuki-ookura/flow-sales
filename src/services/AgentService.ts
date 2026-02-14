@@ -5,6 +5,7 @@ import { PersonalizationService } from "./PersonalizationService";
 import { ResearchService } from "./ResearchService";
 import { SlackService } from "./SlackService";
 import { ExclusionService } from "./ExclusionService";
+import { SettingsService } from "./SettingsService";
 
 export class AgentService {
 	/**
@@ -99,7 +100,7 @@ export class AgentService {
 		const email = rawLead.email;
 		if (!email) return;
 
-		if (ExclusionService.isExcluded(email)) {
+		if (await SettingsService.isExcluded(email)) {
 			console.log(`Lead skipped (Excluded Domain): ${email}`);
 			return;
 		}

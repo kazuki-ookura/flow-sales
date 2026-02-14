@@ -40,3 +40,11 @@ export const leads = sqliteTable("leads", {
 	),
 	unsubscribed: integer("unsubscribed", { mode: "boolean" }).default(false),
 });
+
+export const settings = sqliteTable("settings", {
+	key: text("key").primaryKey(),
+	value: text("value").notNull(),
+	updatedAt: integer("updated_at", { mode: "timestamp" }).default(
+		sql`(strftime('%s', 'now'))`,
+	),
+});

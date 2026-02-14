@@ -14,7 +14,9 @@
     Mail,
     User,
     Building2,
-    CheckCircle
+    CheckCircle,
+    Settings,
+    Save
   } from 'lucide-svelte';
 
   interface Lead {
@@ -55,6 +57,9 @@
   let modalConfig = $state({ id: '', action: 'APPROVE', title: '', text: '', emailContent: '' as string | null });
   let processingAction = $state(false);
   let expandedHistoryId = $state<string | null>(null);
+  let showSettings = $state(false);
+  let excludedDomains = $state('');
+  let savingSettings = $state(false);
 
   async function fetchData() {
     try {
@@ -76,8 +81,42 @@
     }
   }
 
+  async function fetchSettings() {
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const data = await res.json();
+        excludedDomains = data.excludedDomains;
+      }
+    } catch (e) {
+      console.error('Failed to fetch settings');
+    }
+  }
+
+  async function saveSettings() {
+    savingSettings = true;
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ excludedDomains })
+      });
+      if (res.ok) {
+        showSettings = false;
+        alert('Settings saved successfully!');
+      } else {
+        alert('Failed to save settings');
+      }
+    } catch (e) {
+      alert('Error saving settings');
+    } finally {
+      savingSettings = false;
+    }
+  }
+
   onMount(() => {
     fetchData();
+    fetchSettings();
     const interval = setInterval(fetchData, 30000); // Poll every 30s
     return () => clearInterval(interval);
   });
@@ -144,6 +183,9 @@
       <h1>Launch Flow <span class="accent-text">SDR</span></h1>
     </div>
     <div class="header-actions">
+      <button class="btn btn-ghost" onclick={() => (showSettings = !showSettings)} title="Settings">
+        <Settings size={20} />
+      </button>
       <button class="btn btn-ghost" onclick={fetchData} disabled={loading}>
         <RefreshCw size={18} class={loading ? 'spin' : ''} />
       </button>
@@ -152,6 +194,35 @@
       </button>
     </div>
   </header>
+
+  <!-- Settings Panel -->
+  {#if showSettings}
+    <div class="glass settings-panel" transition:slide>
+      <div class="settings-header">
+        <h3>Campaign Settings</h3>
+        <button class="btn btn-primary btn-sm" onclick={saveSettings} disabled={savingSettings}>
+          {#if savingSettings}
+            <RefreshCw size={14} class="spin" />
+          {:else}
+            <Save size={14} />
+          {/if}
+          Save Settings
+        </button>
+      </div>
+      <div class="settings-body">
+        <label for="excluded-domains">
+          <strong>Excluded Domains</strong>
+          <p class="label-hint">Domains to skip during outreach (comma separated). Example: competitor.com, rival.jp</p>
+        </label>
+        <textarea 
+          id="excluded-domains"
+          class="glass input-textarea"
+          bind:value={excludedDomains}
+          placeholder="e.g. gmail.com, yahoo.co.jp, competitor.com"
+        ></textarea>
+      </div>
+    </div>
+  {/if}
 
   <!-- Stats Grid -->
   {#if globalStats}
@@ -772,4 +843,49 @@
     border-radius: 6px;
   }
   .btn-icon:hover { color: var(--primary); background: rgba(255,255,255,0.05); }
+
+  /* Settings Panel */
+  .settings-panel {
+    margin-bottom: 40px;
+    padding: 30px;
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .settings-header h3 { margin: 0; font-size: 1.25rem; }
+
+  .settings-body label {
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .label-hint {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+  }
+
+  .input-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 16px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    box-sizing: border-box;
+    margin-top: 8px;
+  }
+
+  .btn-sm {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
 </style>
