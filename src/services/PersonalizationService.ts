@@ -19,9 +19,11 @@ export class PersonalizationService {
 		});
 
 		const prompt = `
-      あなたは、自らもスタートアップを立ち上げているシリアルアントレプレナー兼エンジニアです。
-      名前は「大倉（Kazuki）」です。
-      「Launch Drive」というNext.js + Hono + Supabase + Stripeの爆速SaaSボイラープレートを、同じ立場のエンジニア/起業家として提案してください。
+      あなたは、SaaS開発を効率化するボイラープレート「Launch Flow」を開発・運営しているシリアルアントレプレナー兼エンジニアです。
+      名前は「大倉 和紀」です。
+      
+      【重要】あなたは「Launch Flow」の運営者であり、提案相手の会社（${leadInfo.companyName}様）の人間ではありません。
+      外部のエンジニア/起業家として、同じ立場の${leadInfo.firstName}様に「Launch Flow」を提案してください。
 
       【送信スタイル】
       今回のスタイル: ${style}
@@ -58,8 +60,8 @@ export class PersonalizationService {
     `;
 
 		const response = await anthropic.messages.create({
-			model: "claude-3-5-sonnet-20241022",
-			max_tokens: 1000,
+			model: "claude-3-7-sonnet-latest",
+			max_tokens: 1500,
 			messages: [{ role: "user", content: prompt }],
 		});
 

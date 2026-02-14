@@ -15,29 +15,27 @@ export class InstantlyService {
 			throw new Error("Instantly API key or Campaign ID is missing");
 		}
 
-		const response = await fetch("https://api.instantly.ai/api/v1/lead/add", {
+		console.log(`[Instantly V2] Adding lead ${email} to campaign ${InstantlyService.CAMPAIGN_ID}`);
+
+		const response = await fetch("https://api.instantly.ai/api/v2/leads", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				Authorization: `Bearer ${InstantlyService.API_KEY}`,
+				"Authorization": `Bearer ${InstantlyService.API_KEY}`,
 			},
 			body: JSON.stringify({
 				campaign_id: InstantlyService.CAMPAIGN_ID,
 				skip_if_in_workspace: true,
-				leads: [
-					{
-						email: email,
-						first_name: firstName,
-						last_name: lastName,
-						personalization: personalizedEmail, // カスタム変数として使用可能
-					},
-				],
+				email: email,
+				first_name: firstName,
+				last_name: lastName,
+				personalization: personalizedEmail,
 			}),
 		});
 
 		if (!response.ok) {
 			const errorText = await response.text();
-			throw new Error(`Instantly API Error: ${errorText}`);
+			throw new Error(`Instantly V2 API Error: ${response.status} ${errorText}`);
 		}
 
 		return await response.json();

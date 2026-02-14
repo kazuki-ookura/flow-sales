@@ -82,6 +82,8 @@ export class AgentService {
 
 				try {
 					await AgentService.executeLeadWorkflow(lead);
+					// レートリミット回避のため、1件ごとに5秒待機
+					await new Promise((resolve) => setTimeout(resolve, 5000));
 				} catch (error) {
 					console.error(`Fatal error in lead loop for ${lead.email}:`, error);
 				}
