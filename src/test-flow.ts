@@ -14,6 +14,7 @@ async function test() {
 	const firstName = process.argv[3] || "John";
 	const lastName = process.argv[4] || "Doe";
 	const jobTitle = process.argv[5] || "CTO";
+	const companyName = process.argv[6] || "";
 
 	const websiteUrl = targetDomain.startsWith("http")
 		? targetDomain
@@ -33,7 +34,7 @@ async function test() {
 		title: jobTitle,
 		email: targetEmail,
 		organization: {
-			name: "Test Corp",
+			name: companyName || targetDomain.split(".").at(0)?.toUpperCase() || targetDomain.toUpperCase(),
 			website_url: websiteUrl,
 			primary_domain: targetDomain,
 		},
