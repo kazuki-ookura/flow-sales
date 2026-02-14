@@ -8,13 +8,18 @@ import { AgentService } from "./services/AgentService";
  * リサーチ → パーソナライズ → 承認待ちステータスへの遷移を確認します。
  */
 async function test() {
-	// コマンドライン引数からドメインを取得 (例: bun src/test-flow.ts google.com)
+	// コマンドライン引数の取得
+	// 例: bun src/test-flow.ts <domain> <first_name> <last_name> <title>
 	const targetDomain = process.argv[2] || "firecrawl.dev";
+	const firstName = process.argv[3] || "John";
+	const lastName = process.argv[4] || "Doe";
+	const jobTitle = process.argv[5] || "CTO";
+
 	const websiteUrl = targetDomain.startsWith("http")
 		? targetDomain
 		: `https://${targetDomain}`;
 
-	console.log(`\nTesting with domain: ${targetDomain}`);
+	console.log(`\nTesting with domain: ${targetDomain} (${firstName} ${lastName}, ${jobTitle})`);
 
 	// テスト用の環境変数を設定
 	process.env.REQUIRE_APPROVAL = "true";
@@ -22,10 +27,10 @@ async function test() {
 
 	const targetEmail = `test-${Date.now()}@${targetDomain}`;
 	const sampleLead = {
-		first_name: "John",
-		last_name: "Doe",
-		name: "John Doe",
-		title: "CTO",
+		first_name: firstName,
+		last_name: lastName,
+		name: `${firstName} ${lastName}`,
+		title: jobTitle,
 		email: targetEmail,
 		organization: {
 			name: "Test Corp",

@@ -133,9 +133,8 @@ export class AgentService {
 				console.log(`New lead saved: ${email}`);
 				return lead;
 			}
-			// 既存リードの場合は再取得
-			const [existing] = await LeadService.getLeadsByStatus("PENDING"); // 暫定
-			return existing;
+			// 既存リードの場合は再取得（emailで特定）
+			return await LeadService.getLeadByEmail(email);
 		} catch (error) {
 			console.error(`Failed to save lead ${email}:`, error);
 			return null;

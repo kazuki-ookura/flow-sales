@@ -26,6 +26,17 @@ export class LeadService {
 	}
 
 	/**
+	 * メールアドレスからリードを1件取得します。
+	 */
+	static async getLeadByEmail(email: string) {
+		return await db
+			.select()
+			.from(leads)
+			.where(eq(leads.email, email))
+			.get();
+	}
+
+	/**
 	 * 指定したステータスのリードを一覧取得します。
 	 */
 	static async getLeadsByStatus(
