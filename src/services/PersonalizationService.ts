@@ -57,6 +57,10 @@ export class PersonalizationService {
       【出力形式】
       件名: [相手が思わず開く、パーソナライズされた15文字以内のタイトル]
       本文: [上記のルールを守った本文]
+
+      --
+      大倉 和紀 | i-media LLC 代表
+      SaaS開発スタック「Launch Flow」開発者
     `;
 
 		const response = await anthropic.messages.create({
