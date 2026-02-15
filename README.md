@@ -174,7 +174,7 @@ bun dev
    - 技術スタックの特定（Next.js, Tailwind等）
    - ビジネスモデルの把握
    - 開発における「痛み」の推論
-4. **Email Drafting**: 抽出された情報を元に、「Launch Flow」がどう役立つかを具体的に示すメールを執筆。
+4. **Email Drafting**: 抽出された情報を元に、提案する商材がどう役立つかを具体的に示すメールを執筆。
 5. **Instantly Push**: `personalization` 変数と共にInstantlyへリードを登録。
 
 ## ⚠️ Security & Best Practices

@@ -180,7 +180,7 @@
   <header class="glass header">
     <div class="brand">
       <LayoutDashboard class="icon-primary" size={28} />
-      <h1>Launch Flow <span class="accent-text">SDR</span></h1>
+      <h1>FlowSales <span class="accent-text">SDR</span></h1>
     </div>
     <div class="header-actions">
       <button class="btn btn-ghost" onclick={() => (showSettings = !showSettings)} title="Settings">
