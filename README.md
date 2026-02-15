@@ -1,12 +1,12 @@
 # 🌊 FlowSales: Autonomous AI SDR System
 
-FlowSalesは、SaaSボイラープレート「Launch Flow」の販売を最大化するために設計された、完全自律型のAI SDR（Sales Development Representative）システムです。リードの獲得から会社リサーチ、パーソナライズされたメール生成、そして送信予約までをノンストップで自動化します。
+FlowSalesは、あらゆるプロダクトやサービスの販売を最大化するために設計された、完全自律型のAI SDR（Sales Development Representative）システムです。リードの獲得から会社リサーチ、パーソナライズされたメール生成、そして送信予約までをノンストップで自動化します。
 
 ## 🚀 Key Features
 
-- **Lead Generation**: Apollo.io APIを使用して、ターゲットとなるCTOや創業主を精密にフィルタリング。
+- **Lead Generation**: Apollo.io APIを使用して、ターゲットを精密にフィルタリング。
 - **Deep Research**: Firecrawlを使用してウェブサイトをスクレイピングし、Claude 3.5 Sonnetで技術スタックや潜在的な課題を自動解析。
-- **Ultra-Personalization**: リサーチ結果に基づき、相手の文脈に完全に合わせた1:1の営業メールをAIが生成。
+- **Ultra-Personalization**: リサーチ結果に基づき、相手の文脈に完全に合わせた1:1の営業メールをAIが生成。商材情報は環境変数で簡単にカスタマイズ可能です。
 - **Seamless Outreach**: パーソナライズされたメールをInstantly.aiのキャンペーンへ自動投入。
 - **Lead Tracking**: SQLite + Drizzle ORMによる堅牢な重複排除と進捗管理。
 

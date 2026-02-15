@@ -3,6 +3,18 @@ import Anthropic from "@anthropic-ai/sdk";
 export class PersonalizationService {
 	private static ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
+	// 環境変数から商材情報を取得（デフォルト値は Launch Flow の例を設定）
+	private static SENDER_NAME = process.env.SDR_SENDER_NAME || "大倉 和紀";
+	private static SENDER_TITLE =
+		process.env.SDR_SENDER_TITLE || "i-media LLC 代表";
+	private static PRODUCT_NAME = process.env.SDR_PRODUCT_NAME || "Launch Flow";
+	private static PRODUCT_DESCRIPTION =
+		process.env.SDR_PRODUCT_DESCRIPTION ||
+		"TypeScript環境に特化した、高速なTime to Marketを実現するSaaS開発ボイラープレート。React, Next.js, Hono, Drizzle ORMを採用。";
+	private static PRODUCT_RESTRICTIONS =
+		process.env.SDR_PRODUCT_RESTRICTIONS ||
+		"PHP, Laravel, WordPress, Ruby on Rails などには対応していません。";
+
 	/**
 	 * リード情報とリサーチ結果に基づいてパーソナライズされたメールを生成します。
 	 */
@@ -19,16 +31,15 @@ export class PersonalizationService {
 		});
 
 		const prompt = `
-      あなたは、SaaS開発を効率化するボイラープレート「Launch Flow」を開発・運営しているシリアルアントレプレナー兼エンジニアです。
-      名前は「大倉 和紀」です。
+      あなたは、${this.PRODUCT_NAME}を提供している${this.SENDER_TITLE}の${this.SENDER_NAME}です。
       
-      【Launch Flowの製品情報】
-      - 技術スタック: TypeScript, React, Next.js, Hono, Drizzle ORM, SQLite
-      - 特徴: 高速なTime to Market (TTM)、フルタイプセーフ、シンプルで堅牢なアーキテクチャ
-      - 注意: PHP, Laravel, WordPress, Ruby on Rails などには対応していません。TypeScript/JavaScript環境に特化しています。
+      【製品/サービス情報】
+      - 名称: ${this.PRODUCT_NAME}
+      - 内容: ${this.PRODUCT_DESCRIPTION}
+      - 制約/対象外: ${this.PRODUCT_RESTRICTIONS}
       
-      【重要】あなたは「Launch Flow」の運営者であり、提案相手の会社（${leadInfo.companyName}様）の人間ではありません。
-      外部のエンジニア/起業家として、同じ立場の${leadInfo.firstName}様に「Launch Flow」を提案してください。
+      【重要】あなたは「${this.PRODUCT_NAME}」の運営者であり、提案相手の会社（${leadInfo.companyName}様）の人間ではありません。
+      外部の専門家/起業家として、同じ立場の${leadInfo.firstName}様に「${this.PRODUCT_NAME}」を提案してください。
 
       【送信スタイル】
       今回のスタイル: ${style}
@@ -56,19 +67,18 @@ export class PersonalizationService {
          - 挨拶は「${leadInfo.firstName}さん、こんにちは（または、はじめまして）」など、人間味のある形にする。
       2. 冒頭で「信頼」を勝ち取る:
          - 冒頭の一文は必ず、${researchData.whyNowHook} や ${researchData.hiringIntent}、${researchData.recentNews} に基づいた「今、あなたに連絡した具体的かつ個人的な理由」から始めてください。
-         - 例: 「${leadInfo.companyName}さんのエンジニア採用の募集を拝見し、...」や「${researchData.recentNews}のリリース、おめでとうございます！」など。
-      3. エンジニア/起業家同士の「対話」にする:
-         - ${researchData.technicalPainPoints}について、「実は私も以前、同じ構成で苦労したことがありまして」のようなストーリーを適宜混ぜる。
+      3. 専門家/起業家同士の「対話」にする:
+         - ${researchData.technicalPainPoints}について、自身の経験や専門知識を交えて共感を示す。
       4. シンプルなCTA:
-         - いきなりミーティングを組もうとせず、「エンジニア同士、情報交換だけでもできませんか？」や「もし興味があれば資料だけお送りします」といった低いハードルを設定する。
+         - いきなりミーティングを組もうとせず、「情報交換」や「資料送付」といった低いハードルを設定する。
 
       【出力形式】
       件名: [相手が思わず開く、パーソナライズされた15文字以内のタイトル]
       本文: [上記のルールを守った本文]
 
       --
-      大倉 和紀 | i-media LLC 代表
-      SaaS開発スタック「Launch Flow」開発者
+      ${this.SENDER_NAME} | ${this.SENDER_TITLE}
+      ${this.PRODUCT_NAME} 担当者
     `;
 
 		const response = await anthropic.messages.create({
