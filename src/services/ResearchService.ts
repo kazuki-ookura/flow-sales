@@ -111,7 +111,7 @@ export class ResearchService {
 		const truncatedMarkdown = combinedMarkdown.substring(0, 6000);
 
 		const response = await anthropic.messages.create({
-			model: "claude-4-6-sonnet-latest",
+			model: process.env.ANTHROPIC_MODEL || "claude-3-7-sonnet-latest",
 			max_tokens: 1500,
 			system: `
         あなたは一流のセールスリサーチャー兼技術コンサルタントです。
