@@ -3,17 +3,11 @@ import Anthropic from "@anthropic-ai/sdk";
 export class PersonalizationService {
 	private static ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-	// 環境変数から商材情報を取得
-	private static SENDER_NAME = process.env.SDR_SENDER_NAME || "[Your Name]";
-	private static SENDER_TITLE =
-		process.env.SDR_SENDER_TITLE || "[Your Title/Company]";
-	private static PRODUCT_NAME = process.env.SDR_PRODUCT_NAME || "[Your Product]";
-	private static PRODUCT_DESCRIPTION =
-		process.env.SDR_PRODUCT_DESCRIPTION ||
-		"高速なTime to Marketを実現するプロダクト/サービスの解説をここに記載してください。";
-	private static PRODUCT_RESTRICTIONS =
-		process.env.SDR_PRODUCT_RESTRICTIONS ||
-		"対象外となる顧客や技術スタックがあればここに記載してください。";
+	private static SENDER_NAME = process.env.SDR_SENDER_NAME;
+	private static SENDER_TITLE = process.env.SDR_SENDER_TITLE;
+	private static PRODUCT_NAME = process.env.SDR_PRODUCT_NAME;
+	private static PRODUCT_DESCRIPTION = process.env.SDR_PRODUCT_DESCRIPTION;
+	private static PRODUCT_RESTRICTIONS = process.env.SDR_PRODUCT_RESTRICTIONS;
 
 	/**
 	 * リード情報とリサーチ結果に基づいてパーソナライズされたメールを生成します。
@@ -26,17 +20,24 @@ export class PersonalizationService {
 		if (!PersonalizationService.ANTHROPIC_API_KEY)
 			throw new Error("ANTHROPIC_API_KEY is missing");
 
+		// 必須設定のバリデーション
+		if (!this.SENDER_NAME || !this.PRODUCT_NAME || !this.PRODUCT_DESCRIPTION) {
+			throw new Error(
+				"SDR configuration is incomplete. Please set SDR_SENDER_NAME, SDR_PRODUCT_NAME, and SDR_PRODUCT_DESCRIPTION in .env",
+			);
+		}
+
 		const anthropic = new Anthropic({
 			apiKey: PersonalizationService.ANTHROPIC_API_KEY,
 		});
 
 		const prompt = `
-      あなたは、${this.PRODUCT_NAME}を提供している${this.SENDER_TITLE}の${this.SENDER_NAME}です。
+      あなたは、${this.PRODUCT_NAME}を提供している${this.SENDER_TITLE || ""}の${this.SENDER_NAME}です。
       
       【製品/サービス情報】
       - 名称: ${this.PRODUCT_NAME}
       - 内容: ${this.PRODUCT_DESCRIPTION}
-      - 制約/対象外: ${this.PRODUCT_RESTRICTIONS}
+      - 制約/対象外: ${this.PRODUCT_RESTRICTIONS || "特に無し"}
       
       【重要】あなたは「${this.PRODUCT_NAME}」の運営者であり、提案相手の会社（${leadInfo.companyName}様）の人間ではありません。
       外部の専門家/起業家として、同じ立場の${leadInfo.firstName}様に「${this.PRODUCT_NAME}」を提案してください。
