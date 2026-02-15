@@ -30,6 +30,7 @@
 		"dev-server": "bun run src/index.ts",
 		"dev-ui": "cd frontend && bun run dev",
 		"test": "bun test",
+		"test-flow": "bun run src/test-flow.ts",
 		"db:push": "bunx drizzle-kit push",
 		"lint": "biome lint .",
 		"format": "biome format --write .",

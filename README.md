@@ -149,11 +149,15 @@ bun db:push
 
 ### 5. Verification (Test Run)
 
-実際のAPIキーを使用する前に、ロジックの流れを確認できます。
+特定のドメインに対して、リサーチからメール生成までの流れをテストできます（実際にメールは送信されず、承認待ちステータスで止まります）。
 
 ```bash
-# APIキーがない場合はモックデータで実行されます
+# 基本的なテスト実行
 bun test-flow
+
+# 特定のターゲットを指定してテスト
+# bun test-flow <domain> <first_name> <last_name> <job_title>
+bun test-flow google.com Larry Page CEO
 ```
 
 ### 6. Running the System
