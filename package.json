@@ -1,8 +1,21 @@
 {
-	"name": "launch-drive",
+	"name": "flow-sales",
 	"module": "index.ts",
 	"type": "module",
-	"private": true,
+	"version": "1.0.0",
+	"description": "Autonomous AI SDR System powered by Bun and Claude 3.5 Sonnet",
+	"keywords": [
+		"ai-agent",
+		"sdr",
+		"automation",
+		"bun",
+		"typescript",
+		"claude",
+		"hono",
+		"drizzle-orm",
+		"cold-email"
+	],
+	"license": "MIT",
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.15",
 		"@types/bun": "^1.3.9",
