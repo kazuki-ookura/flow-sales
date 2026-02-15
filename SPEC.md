@@ -1,7 +1,7 @@
 # SPEC.md - FlowSales: Autonomous AI SDR System
 
 ## 1. Overview
-FlowSales is an autonomous AI SDR (Sales Development Representative) system designed to automate lead generation, company research, and personalized outreach. It targets CTOs and Founders of seed-stage startups or dev agencies to promote "Launch Flow" (a SaaS boilerplate).
+FlowSales is an autonomous AI SDR (Sales Development Representative) system designed to automate lead generation, company research, and personalized outreach. It is built to be highly customizable for any product or service.
 
 ## 2. Technical Stack
 - **Language/Runtime:** TypeScript / Bun
@@ -58,13 +58,13 @@ The system is built with a modular service-oriented architecture.
    - Tech stack (Next.js, React, etc.)
    - Recent news or "About Us" mission
    - Potential pain points (e.g., slow development cycle, manual infra management)
-6. **Personalize:** Claude generates a personalized outreach email emphasizing how "Launch Flow" addresses the identified pain points.
+6. **Personalize:** Claude generates a personalized outreach email emphasizing how your product addresses the identified pain points.
 7. **Deploy:** `InstantlyService` pushes the lead + `personalizedEmail` to a specific Campaign ID.
 8. **Update:** Mark lead as `SENT` in SQLite.
 
 ## 6. Personalization Strategy
-- **Tech-Driven:** If the company uses Next.js, highlight how Launch Flow provides a pre-configured architecture for it.
-- **Phase-Driven:** For seed-stage, focus on "Speed to Market".
+- **Value-Driven:** Align product features with the lead's tech stack or business phase.
+- **Phase-Driven:** For startups, focus on "Speed to Market" or "Efficiency".
 - **Mission-Driven:** Mention something specific from their mission statement scraped by Firecrawl.
 
 ## 7. Error Handling & Robustness

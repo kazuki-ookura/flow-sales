@@ -162,9 +162,9 @@ bun test-flow
 bun dev
 ```
 
-- `GET /`: 管理コントロールパネル（Legacy）
-- `http://localhost:5173`: Svelte 5 ダッシュボード（最新・推奨）
-- `GET /api/data`: フロントエンド用データAPI
+- `GET /`: Admin Control Panel (Legacy)
+- `http://localhost:5173`: Main Dashboard (Recommended)
+- `GET /api/data`: Data API for Frontend
 
 ## 🤖 SDR Workflow Details
 
