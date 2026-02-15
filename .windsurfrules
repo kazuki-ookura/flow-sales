@@ -1,0 +1,17 @@
+# FlowSales Project Rules
+
+Default to using Bun instead of Node.js.
+
+## Commands
+- Use `bun <file>` instead of `node <file>`
+- Use `bun test` instead of `vitest`
+- Use `bun install`
+- Use `bun run`
+
+## Language
+- 全てのアーティファクトおよびドキュメントは日本語で作成してください。
+
+## APIs
+- `bun:sqlite` for SQLite.
+- `Bun.serve()` for server.
+- No `vite`, use Bun's native bundler.

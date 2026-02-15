@@ -1,0 +1,19 @@
+# FlowSales Project Rules
+
+Default to using Bun instead of Node.js.
+
+## Commands
+- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
+- Use `bun test` instead of `jest` or `vitest`
+- Use `bun install` instead of `npm install`
+- Use `bun run <script>` instead of `npm run <script>`
+- Bun automatically loads .env, so don't use dotenv.
+
+## Language & Communication
+- 全てのアーティファクトおよびテクニカルドキュメントは、日本語で作成してください。
+- ファイル名や関数名を参照する際は ` ` で囲んでください。
+
+## Technical Guidance
+- `bun:sqlite` を使用し、`better-sqlite3` は使用しないでください。
+- `Bun.serve()` を使用し、`express` は使用しないでください。
+- Frontend開発において `vite` は使用せず、Bunのネイティブトランスパイル機能を活用してください。
