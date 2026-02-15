@@ -3,17 +3,17 @@ import Anthropic from "@anthropic-ai/sdk";
 export class PersonalizationService {
 	private static ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-	// 環境変数から商材情報を取得（デフォルト値は Launch Flow の例を設定）
-	private static SENDER_NAME = process.env.SDR_SENDER_NAME || "大倉 和紀";
+	// 環境変数から商材情報を取得
+	private static SENDER_NAME = process.env.SDR_SENDER_NAME || "[Your Name]";
 	private static SENDER_TITLE =
-		process.env.SDR_SENDER_TITLE || "i-media LLC 代表";
-	private static PRODUCT_NAME = process.env.SDR_PRODUCT_NAME || "Launch Flow";
+		process.env.SDR_SENDER_TITLE || "[Your Title/Company]";
+	private static PRODUCT_NAME = process.env.SDR_PRODUCT_NAME || "[Your Product]";
 	private static PRODUCT_DESCRIPTION =
 		process.env.SDR_PRODUCT_DESCRIPTION ||
-		"TypeScript環境に特化した、高速なTime to Marketを実現するSaaS開発ボイラープレート。React, Next.js, Hono, Drizzle ORMを採用。";
+		"高速なTime to Marketを実現するプロダクト/サービスの解説をここに記載してください。";
 	private static PRODUCT_RESTRICTIONS =
 		process.env.SDR_PRODUCT_RESTRICTIONS ||
-		"PHP, Laravel, WordPress, Ruby on Rails などには対応していません。";
+		"対象外となる顧客や技術スタックがあればここに記載してください。";
 
 	/**
 	 * リード情報とリサーチ結果に基づいてパーソナライズされたメールを生成します。
