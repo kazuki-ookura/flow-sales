@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { Logger } from "../utils/Logger";
 
 export class ResearchService {
 	private static FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
@@ -45,7 +46,7 @@ export class ResearchService {
 			combinedMarkdown = scrapeData.data?.markdown || "";
 		} else {
 			// 2. Firecrawlでクロール (最大5ページ)
-			console.log(`Starting crawl for ${url}...`);
+			Logger.info(`Starting crawl for ${url}...`);
 			const crawlResponse = await fetch("https://api.firecrawl.dev/v1/crawl", {
 				method: "POST",
 				headers: {
@@ -86,7 +87,7 @@ export class ResearchService {
 				);
 				crawlData = await pollResponse.json();
 				status = crawlData.status;
-				console.log(`Crawl status for ${id}: ${status}`);
+				Logger.debug(`Crawl status for ${id}: ${status}`);
 			}
 
 			if (status === "completed" && crawlData.data) {
@@ -148,8 +149,8 @@ export class ResearchService {
 				fullContent: combinedMarkdown,
 			};
 		} catch (e) {
-			console.error("AI Analysis Parse Error or JSON Error:", e);
-			console.log("Raw content was:", response.content[0]);
+			Logger.error("AI Analysis Parse Error or JSON Error:", e);
+			Logger.debug(`Raw content was: ${JSON.stringify(response.content[0])}`);
 			return {
 				techStack: "Unknown",
 				businessSummary: "Failed to summarize",

@@ -1,3 +1,5 @@
+import { Logger } from "../utils/Logger";
+
 export class InstantlyService {
 	private static API_KEY = process.env.INSTANTLY_API_KEY;
 	private static CAMPAIGN_ID = process.env.INSTANTLY_CAMPAIGN_ID;
@@ -15,7 +17,9 @@ export class InstantlyService {
 			throw new Error("Instantly API key or Campaign ID is missing");
 		}
 
-		console.log(`[Instantly V2] Adding lead ${email} to campaign ${InstantlyService.CAMPAIGN_ID}`);
+		Logger.info(
+			`[Instantly V2] Adding lead ${email} to campaign ${InstantlyService.CAMPAIGN_ID}`,
+		);
 
 		const response = await fetch("https://api.instantly.ai/api/v2/leads", {
 			method: "POST",

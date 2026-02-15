@@ -6,6 +6,7 @@ import { ResearchService } from "./ResearchService";
 import { SlackService } from "./SlackService";
 import { ExclusionService } from "./ExclusionService";
 import { SettingsService } from "./SettingsService";
+import { Logger } from "../utils/Logger";
 
 export class AgentService {
 	/**
@@ -14,30 +15,30 @@ export class AgentService {
 	 * 2. 未処理のリード（PENDING等）を順番に処理
 	 */
 	static async runWorkflow() {
-		console.log("=== Starting FlowSales Workflow ===");
+		Logger.info("=== Starting FlowSales Workflow ===");
 
 		// 1日の上限チェック
 		const dailyLimit = parseInt(process.env.DAILY_SEND_LIMIT || "50", 10);
 		const sentToday = await LeadService.getSentCountToday();
 		if (sentToday >= dailyLimit) {
-			console.log(
-				`⚠️ Daily send limit reached (${sentToday}/${dailyLimit}). Stops.`,
+			Logger.warn(
+				`Daily send limit reached (${sentToday}/${dailyLimit}). Stops.`,
 			);
 			return;
 		}
 
 		// 1. Apolloから新しいリードを取得して保存
-		console.log("Fetching new leads from Apollo...");
+		Logger.info("Fetching new leads from Apollo...");
 		try {
 			const searchResults = await ApolloService.searchLeads(["CTO", "Founder"]);
 			const rawLeads = searchResults.people || [];
-			console.log(`Found ${rawLeads.length} new potential leads from Apollo.`);
+			Logger.info(`Found ${rawLeads.length} new potential leads from Apollo.`);
 
 			for (const rawLead of rawLeads) {
 				await AgentService.saveRawLead(rawLead);
 			}
 		} catch (error) {
-			console.error("Failed to fetch leads from Apollo:", error);
+			Logger.error("Failed to fetch leads from Apollo:", error);
 		}
 
 		// 2. 未処理のリードを処理
@@ -49,7 +50,7 @@ export class AgentService {
 			await SlackService.notifyWaitingApproval(waiting.length);
 		}
 
-		console.log("=== Workflow Completed ===");
+		Logger.info("=== Workflow Completed ===");
 	}
 
 	/**
@@ -69,14 +70,14 @@ export class AgentService {
 			const leads = await LeadService.getLeadsByStatus(status as any);
 			if (leads.length === 0) continue;
 
-			console.log(`Processing ${leads.length} leads with status: ${status}`);
+			Logger.info(`Processing ${leads.length} leads with status: ${status}`);
 
 			for (const lead of leads) {
 				// 送信済み上限を再チェック
 				const sentToday = await LeadService.getSentCountToday();
 				const dailyLimit = parseInt(process.env.DAILY_SEND_LIMIT || "50", 10);
 				if (sentToday >= dailyLimit) {
-					console.log(
+					Logger.warn(
 						"Daily limit reached during processing. Skipping remaining leads.",
 					);
 					return;
@@ -87,7 +88,7 @@ export class AgentService {
 					// レートリミット回避のため、1件ごとに5秒待機
 					await new Promise((resolve) => setTimeout(resolve, 5000));
 				} catch (error) {
-					console.error(`Fatal error in lead loop for ${lead.email}:`, error);
+					Logger.error(`Fatal error in lead loop for ${lead.email}:`, error);
 				}
 			}
 		}
@@ -113,7 +114,7 @@ export class AgentService {
 		if (!email) return null;
 
 		if (await SettingsService.isExcluded(email)) {
-			console.log(`Lead skipped (Excluded Domain): ${email}`);
+			Logger.debug(`Lead skipped (Excluded Domain): ${email}`);
 			return null;
 		}
 
@@ -130,13 +131,13 @@ export class AgentService {
 		try {
 			const lead = await LeadService.upsertLead(leadData);
 			if (lead) {
-				console.log(`New lead saved: ${email}`);
+				Logger.info(`New lead saved: ${email}`);
 				return lead;
 			}
 			// 既存リードの場合は再取得（emailで特定）
 			return await LeadService.getLeadByEmail(email);
 		} catch (error) {
-			console.error(`Failed to save lead ${email}:`, error);
+			Logger.error(`Failed to save lead ${email}:`, error);
 			return null;
 		}
 	}
@@ -152,7 +153,7 @@ export class AgentService {
 					throw new Error("Website URL is missing for research");
 				}
 
-				console.log(`[Research] ${lead.email} (${lead.website})`);
+				Logger.info(`[Research] ${lead.email} (${lead.website})`);
 				const research = await ResearchService.researchWebsite(lead.website, {
 					mode: "crawl",
 				});
@@ -168,7 +169,7 @@ export class AgentService {
 
 			// 3. パーソナライズ
 			if (lead.status === "RESEARCHED") {
-				console.log(`[Personalize] ${lead.email}`);
+				Logger.info(`[Personalize] ${lead.email}`);
 				let researchData;
 				try {
 					researchData = JSON.parse(lead.crawledContent || "{}");
@@ -194,7 +195,7 @@ export class AgentService {
 						? "TECHNICAL"
 						: "BUSINESS";
 
-				console.log(`[Personalize] ${lead.email} (Style: ${style})`);
+				Logger.info(`[Personalize] ${lead.email} (Style: ${style})`);
 				const email = await PersonalizationService.generateEmail(
 					lead,
 					researchData,
@@ -211,7 +212,7 @@ export class AgentService {
 			// 4. 送信判定
 			if (lead.status === "PERSONALIZED") {
 				if (process.env.REQUIRE_APPROVAL === "true") {
-					console.log(`[Wait Approval] ${lead.email}`);
+					Logger.info(`[Wait Approval] ${lead.email}`);
 					await LeadService.updateLead(lead.id, { status: "WAITING_APPROVAL" });
 					// Slackへ詳細通知
 					await SlackService.notifyNewLeadForApproval(lead);
@@ -222,7 +223,7 @@ export class AgentService {
 
 			// 5. 送信
 			if (lead.status === "APPROVED") {
-				console.log(`[Send Approved] ${lead.email}`);
+				Logger.info(`[Send Approved] ${lead.email}`);
 				await AgentService.processSending(
 					lead.id,
 					lead.email,
@@ -232,7 +233,7 @@ export class AgentService {
 				);
 			}
 		} catch (error: any) {
-			console.error(`Workflow error for ${lead.email}:`, error.message);
+			Logger.error(`Workflow error for ${lead.email}:`, error.message);
 			await LeadService.updateLead(lead.id, {
 				status: "FAILED",
 				errorLog: error.message,
@@ -252,7 +253,7 @@ export class AgentService {
 	) {
 		// セーフティ・スロットル (60秒〜180秒)
 		const waitTime = Math.floor(Math.random() * (180 - 60 + 1) + 60);
-		console.log(`[Send] Waiting ${waitTime}s for ${email}...`);
+		Logger.info(`[Send] Waiting ${waitTime}s for ${email}...`);
 		await new Promise((resolve) => setTimeout(resolve, waitTime * 1000));
 
 		await InstantlyService.addLeadToCampaign(email, firstName, lastName, body);
@@ -261,6 +262,6 @@ export class AgentService {
 			status: "SENT",
 			sentAt: new Date(),
 		});
-		console.log(`[Done] Email sent to ${email}`);
+		Logger.info(`[Done] Email sent to ${email}`);
 	}
 }
