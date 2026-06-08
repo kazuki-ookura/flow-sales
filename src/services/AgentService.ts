@@ -158,10 +158,20 @@ export class AgentService {
 					mode: "crawl",
 				});
 
+				// 広告メールお断り検出（特定電子メール法対応）
+				if (research.noAdvertising) {
+					Logger.info(`[Excluded] ${lead.email} - 広告メールお断り検出`);
+					await LeadService.updateLead(lead.id, {
+						status: "FAILED",
+						errorLog: `広告メールお断り検出: ${research.noAdvertisingEvidence || "サイトに拒否表記あり"}`,
+					});
+					return;
+				}
+
 				const [updated] = await LeadService.updateLead(lead.id, {
 					techStack: research.techStack,
 					researchSummary: research.businessSummary,
-					crawledContent: JSON.stringify(research), // 全データを保存
+					crawledContent: JSON.stringify(research),
 					status: "RESEARCHED",
 				});
 				lead = updated;
@@ -200,6 +210,7 @@ export class AgentService {
 					lead,
 					researchData,
 					style,
+					lead.unsubscribeToken ?? undefined,
 				);
 
 				const [updated] = await LeadService.updateLead(lead.id, {
