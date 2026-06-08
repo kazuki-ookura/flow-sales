@@ -3,9 +3,14 @@ import { logger } from "hono/logger";
 import { AgentService } from "./services/AgentService";
 import { LeadService } from "./services/LeadService";
 import { SettingsService } from "./services/SettingsService";
+import { PersonalizationService } from "./services/PersonalizationService";
+import { runMigrations } from "./db";
 
 const app = new Hono();
 app.use("*", logger());
+
+await runMigrations();
+PersonalizationService.warnIfLegalInfoMissing();
 
 // 起動時に一回実行し、その後定期実行する仕組み
 const runAutomatedWorkflow = async () => {
@@ -406,6 +411,96 @@ app.post("/reject/:id", async (c) => {
 			errorLog: "Rejected by user",
 		});
 		return c.json({ success: true });
+	} catch (e: any) {
+		return c.json({ success: false, error: e.message }, 500);
+	}
+});
+
+/**
+ * 配信停止エンドポイント（特定電子メール法対応）
+ */
+app.get("/unsubscribe/:token", async (c) => {
+	const token = c.req.param("token");
+	const lead = await LeadService.getLeadByUnsubscribeToken(token);
+	if (!lead) {
+		return c.html(
+			`<html><body style="font-family:sans-serif;max-width:600px;margin:40px auto;padding:0 20px">
+			<h2>リンクが無効です</h2>
+			<p>このリンクは無効または期限切れです。</p>
+			</body></html>`,
+			404,
+		);
+	}
+	if (!lead.unsubscribed) {
+		await LeadService.unsubscribeLead(lead.id);
+	}
+	return c.html(
+		`<html><body style="font-family:sans-serif;max-width:600px;margin:40px auto;padding:0 20px">
+		<h2>配信停止を受け付けました</h2>
+		<p>${lead.email} への連絡を停止しました。</p>
+		<p>今後このアドレスへのメールは送信されません。</p>
+		</body></html>`,
+	);
+});
+
+/**
+ * 手動オプトアウトAPI（ダッシュボード用）
+ */
+app.post("/api/leads/:id/unsubscribe", async (c) => {
+	const id = c.req.param("id");
+	try {
+		await LeadService.unsubscribeLead(id);
+		return c.json({ success: true });
+	} catch (e: any) {
+		return c.json({ success: false, error: e.message }, 500);
+	}
+});
+
+/**
+ * 抑制リストのCSVエクスポート
+ */
+app.get("/api/suppression/export", async (c) => {
+	const { db } = await import("./db");
+	const { leads } = await import("./db/schema");
+	const { sql } = await import("drizzle-orm");
+	const rows = await db
+		.select({ email: leads.email })
+		.from(leads)
+		.where(sql`${leads.unsubscribed} = 1`)
+		.all();
+	const csv = ["email", ...rows.map((r) => r.email)].join("\n");
+	return new Response(csv, {
+		headers: {
+			"Content-Type": "text/csv",
+			"Content-Disposition": `attachment; filename="unsubscribed_${Date.now()}.csv"`,
+		},
+	});
+});
+
+/**
+ * 抑制リストのCSVインポート
+ */
+app.post("/api/suppression/import", async (c) => {
+	try {
+		const formData = await c.req.formData();
+		const file = formData.get("file") as File | null;
+		if (!file) return c.json({ success: false, error: "ファイルが指定されていません" }, 400);
+
+		const text = await file.text();
+		const emails = text
+			.split(/[\r\n]+/)
+			.map((line) => line.trim().toLowerCase())
+			.filter((line) => line && line.includes("@") && line !== "email");
+
+		let count = 0;
+		for (const email of emails) {
+			const lead = await LeadService.getLeadByEmail(email);
+			if (lead && !lead.unsubscribed) {
+				await LeadService.unsubscribeLead(lead.id);
+				count++;
+			}
+		}
+		return c.json({ success: true, count, total: emails.length });
 	} catch (e: any) {
 		return c.json({ success: false, error: e.message }, 500);
 	}

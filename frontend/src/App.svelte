@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { fade, fly, slide } from 'svelte/transition';
-  import { 
-    Send, 
-    Clock, 
-    CheckCircle2, 
-    XCircle, 
-    AlertCircle, 
-    RefreshCw, 
-    LayoutDashboard, 
+  import {
+    Send,
+    Clock,
+    CheckCircle2,
+    XCircle,
+    AlertCircle,
+    RefreshCw,
+    LayoutDashboard,
     History,
     Eye,
     Mail,
@@ -16,7 +16,10 @@
     Building2,
     CheckCircle,
     Settings,
-    Save
+    Save,
+    BellOff,
+    Upload,
+    Download
   } from 'lucide-svelte';
 
   interface Lead {
@@ -41,6 +44,7 @@
     APPROVED: number;
     SENT: number;
     FAILED: number;
+    UNSUBSCRIBED: number;
   }
 
   // Svelte 5 Runes
@@ -60,6 +64,9 @@
   let showSettings = $state(false);
   let excludedDomains = $state('');
   let savingSettings = $state(false);
+  let importResult = $state<string | null>(null);
+  let importing = $state(false);
+  let unsubscribingId = $state<string | null>(null);
 
   async function fetchData() {
     try {
@@ -173,6 +180,52 @@
       alert('Error triggering workflow');
     }
   }
+
+  async function unsubscribeLead(id: string) {
+    if (!confirm('このリードを配信停止リストに登録しますか？')) return;
+    unsubscribingId = id;
+    try {
+      const res = await fetch(`/api/leads/${id}/unsubscribe`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        await fetchData();
+      } else {
+        alert('Failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (e: any) {
+      alert('Network Error: ' + e.message);
+    } finally {
+      unsubscribingId = null;
+    }
+  }
+
+  async function importSuppression(e: Event) {
+    const input = e.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    importing = true;
+    importResult = null;
+    const formData = new FormData();
+    formData.append('file', input.files[0]);
+    try {
+      const res = await fetch('/api/suppression/import', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        importResult = `${data.count}件を配信停止リストに登録しました（合計 ${data.total} 件処理）`;
+        await fetchData();
+      } else {
+        importResult = 'エラー: ' + (data.error || '不明なエラー');
+      }
+    } catch (e: any) {
+      importResult = 'エラー: ' + e.message;
+    } finally {
+      importing = false;
+      input.value = '';
+    }
+  }
+
+  function exportSuppression() {
+    window.location.href = '/api/suppression/export';
+  }
 </script>
 
 <div class="app-container">
@@ -214,12 +267,38 @@
           <strong>Excluded Domains</strong>
           <p class="label-hint">Domains to skip during outreach (comma separated). Example: competitor.com, rival.jp</p>
         </label>
-        <textarea 
+        <textarea
           id="excluded-domains"
           class="glass input-textarea"
           bind:value={excludedDomains}
           placeholder="e.g. gmail.com, yahoo.co.jp, competitor.com"
         ></textarea>
+
+        <div class="settings-divider"></div>
+
+        <div class="suppression-section">
+          <strong>配信停止リスト（抑制リスト）管理</strong>
+          <p class="label-hint">CSVまたはテキストファイル（1行1メールアドレス）をインポートして一括配信停止登録できます。</p>
+          <div class="suppression-actions">
+            <label class="btn btn-outline btn-sm suppression-import-label">
+              {#if importing}
+                <RefreshCw size={14} class="spin" />
+                インポート中...
+              {:else}
+                <Upload size={14} />
+                CSVインポート
+              {/if}
+              <input type="file" accept=".csv,.txt" onchange={importSuppression} style="display:none" disabled={importing} />
+            </label>
+            <button class="btn btn-outline btn-sm" onclick={exportSuppression}>
+              <Download size={14} />
+              CSVエクスポート
+            </button>
+          </div>
+          {#if importResult}
+            <p class="import-result">{importResult}</p>
+          {/if}
+        </div>
       </div>
     </div>
   {/if}
@@ -261,6 +340,15 @@
         <div class="stat-content">
           <span class="stat-label">Failed/Rejected</span>
           <span class="stat-value">{globalStats.FAILED}</span>
+        </div>
+      </div>
+      <div class="glass stat-card" in:fly={{ y: 20, delay: 400 }}>
+        <div class="stat-icon-wrapper gray">
+          <BellOff size={24} />
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">配信停止済み</span>
+          <span class="stat-value">{globalStats.UNSUBSCRIBED ?? 0}</span>
         </div>
       </div>
     </div>
@@ -354,6 +442,15 @@
                   <button class="btn-text-action" onclick={() => openModal(lead.id, 'VIEW', lead.personalizedEmail)}>
                     <Eye size={14} />
                     View Sent Email
+                  </button>
+                  <button
+                    class="btn-text-action danger"
+                    onclick={() => unsubscribeLead(lead.id)}
+                    disabled={unsubscribingId === lead.id}
+                    title="配信停止リストに登録"
+                  >
+                    <BellOff size={14} />
+                    配信停止
                   </button>
                 </div>
               </div>
@@ -562,6 +659,7 @@
   .stat-icon-wrapper.green { background: rgba(16, 185, 129, 0.1); color: var(--success); }
   .stat-icon-wrapper.orange { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
   .stat-icon-wrapper.red { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+  .stat-icon-wrapper.gray { background: rgba(148, 163, 184, 0.1); color: var(--text-muted); }
 
   .stat-content {
     display: flex;
@@ -774,6 +872,9 @@
     transition: all 0.2s;
   }
   .btn-text-action:hover { color: #818cf8; text-decoration: underline; }
+  .btn-text-action.danger { color: var(--danger); }
+  .btn-text-action.danger:hover { color: #f87171; }
+  .btn-text-action:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .history-card-header .time { font-size: 0.75rem; color: var(--text-muted); }
 
@@ -870,6 +971,49 @@
     color: var(--text-muted);
     margin: 4px 0 0 0;
   }
+
+  .settings-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  .suppression-section strong { display: block; margin-bottom: 6px; }
+
+  .suppression-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .suppression-import-label {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .import-result {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--success);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .btn-outline:hover { background: rgba(255,255,255,0.05); }
 
   .input-textarea {
     width: 100%;

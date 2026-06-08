@@ -128,8 +128,16 @@ export class ResearchService {
           "recentNews": "最近の大きなニュース",
           "technicalPainPoints": "想定される技術的課題",
           "hiringIntent": "採用募集状況（特にエンジニア）",
-          "whyNowHook": "『今』提案すべき具体的な理由（インテント）"
+          "whyNowHook": "『今』提案すべき具体的な理由（インテント）",
+          "noAdvertising": false,
+          "noAdvertisingEvidence": "該当なし"
         }
+
+        【特別指示】noAdvertising フィールドについて：
+        サイト上に「広告メールお断り」「営業メール不可」「無断での営業・勧誘お断り」「DM不可」「セールスお断り」
+        「No cold email」「No unsolicited email」等、広告・営業メールを明示的に拒否する表記がある場合は
+        noAdvertising を true にし、noAdvertisingEvidence に該当箇所の要約を記載してください。
+        メールアドレスと同じ場所（フッター・お問い合わせページ等）にこの表記がある場合は特に重視してください。
       `,
 			messages: [{ role: "user", content: truncatedMarkdown }],
 		});

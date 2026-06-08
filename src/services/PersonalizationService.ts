@@ -9,6 +9,43 @@ export class PersonalizationService {
 	private static PRODUCT_DESCRIPTION = process.env.SDR_PRODUCT_DESCRIPTION;
 	private static PRODUCT_RESTRICTIONS = process.env.SDR_PRODUCT_RESTRICTIONS;
 
+	// 特定電子メール法 第4条 法定表示項目
+	private static COMPANY_NAME = process.env.SDR_COMPANY_NAME;
+	private static COMPANY_ADDRESS = process.env.SDR_COMPANY_ADDRESS;
+	private static COMPANY_PHONE = process.env.SDR_COMPANY_PHONE;
+	private static SUPPORT_EMAIL = process.env.SDR_SUPPORT_EMAIL;
+	static APP_BASE_URL = process.env.APP_BASE_URL;
+
+	static warnIfLegalInfoMissing() {
+		const missing = [];
+		if (!this.COMPANY_NAME) missing.push("SDR_COMPANY_NAME");
+		if (!this.COMPANY_ADDRESS) missing.push("SDR_COMPANY_ADDRESS");
+		if (!this.COMPANY_PHONE && !this.SUPPORT_EMAIL) missing.push("SDR_COMPANY_PHONE または SDR_SUPPORT_EMAIL");
+		if (!this.APP_BASE_URL) missing.push("APP_BASE_URL");
+		if (missing.length > 0) {
+			console.warn(
+				`[警告] 特定電子メール法の法定表示に必要な環境変数が未設定です: ${missing.join(", ")}。` +
+				"メールへの法定表示が不完全になります。"
+			);
+		}
+	}
+
+	private static buildLegalFooter(unsubscribeUrl?: string): string {
+		const lines: string[] = ["", "---", "【配信停止について】"];
+		if (unsubscribeUrl) {
+			lines.push(`このメールの配信を停止するには、以下のリンクをクリックしてください：`);
+			lines.push(unsubscribeUrl);
+		} else {
+			lines.push(`配信停止をご希望の場合は、このメールに返信してください。`);
+		}
+		lines.push("", "【送信者情報】");
+		if (this.COMPANY_NAME) lines.push(this.COMPANY_NAME);
+		if (this.COMPANY_ADDRESS) lines.push(this.COMPANY_ADDRESS);
+		if (this.COMPANY_PHONE) lines.push(`TEL: ${this.COMPANY_PHONE}`);
+		if (this.SUPPORT_EMAIL) lines.push(`Email: ${this.SUPPORT_EMAIL}`);
+		return lines.join("\n");
+	}
+
 	/**
 	 * リード情報とリサーチ結果に基づいてパーソナライズされたメールを生成します。
 	 */
@@ -16,6 +53,7 @@ export class PersonalizationService {
 		leadInfo: any,
 		researchData: any,
 		style: "TECHNICAL" | "BUSINESS" = "TECHNICAL",
+		unsubscribeToken?: string,
 	) {
 		if (!PersonalizationService.ANTHROPIC_API_KEY)
 			throw new Error("ANTHROPIC_API_KEY is missing");
@@ -77,6 +115,7 @@ export class PersonalizationService {
       件名: [相手が思わず開く、パーソナライズされた15文字以内のタイトル]
       本文: [上記のルールを守った本文]
 
+      本文の末尾には必ず以下の署名を含めること（フッターは含めない）：
       --
       ${this.SENDER_NAME} | ${this.SENDER_TITLE}
       ${this.PRODUCT_NAME} 担当者
@@ -89,6 +128,11 @@ export class PersonalizationService {
 		});
 
 		// @ts-expect-error
-		return response.content[0].text;
+		const emailContent: string = response.content[0].text;
+		const unsubscribeUrl = unsubscribeToken && this.APP_BASE_URL
+			? `${this.APP_BASE_URL}/unsubscribe/${unsubscribeToken}`
+			: undefined;
+		const legalFooter = this.buildLegalFooter(unsubscribeUrl);
+		return emailContent + legalFooter;
 	}
 }

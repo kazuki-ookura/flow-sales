@@ -39,6 +39,7 @@ export const leads = sqliteTable("leads", {
 		sql`(strftime('%s', 'now'))`,
 	),
 	unsubscribed: integer("unsubscribed", { mode: "boolean" }).default(false),
+	unsubscribeToken: text("unsubscribe_token").unique(),
 });
 
 export const settings = sqliteTable("settings", {

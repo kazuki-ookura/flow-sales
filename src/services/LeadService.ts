@@ -1,6 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { leads } from "../db/schema";
+import { randomUUID } from "crypto";
 
 export class LeadService {
 	/**
@@ -21,7 +22,10 @@ export class LeadService {
 			return null;
 		}
 
-		const [newLead] = await db.insert(leads).values(leadData).returning();
+		const [newLead] = await db
+			.insert(leads)
+			.values({ ...leadData, unsubscribeToken: randomUUID() })
+			.returning();
 		return newLead;
 	}
 
@@ -34,6 +38,28 @@ export class LeadService {
 			.from(leads)
 			.where(eq(leads.email, email))
 			.get();
+	}
+
+	/**
+	 * 配信停止トークンからリードを1件取得します。
+	 */
+	static async getLeadByUnsubscribeToken(token: string) {
+		return await db
+			.select()
+			.from(leads)
+			.where(eq(leads.unsubscribeToken, token))
+			.get();
+	}
+
+	/**
+	 * リードを配信停止状態にします。
+	 */
+	static async unsubscribeLead(id: string) {
+		return await db
+			.update(leads)
+			.set({ unsubscribed: true, updatedAt: new Date() })
+			.where(eq(leads.id, id))
+			.returning();
 	}
 
 	/**
@@ -103,6 +129,12 @@ export class LeadService {
 			.groupBy(leads.status)
 			.all();
 
+		const unsubscribedResult = await db
+			.select({ count: sql<number>`count(*)` })
+			.from(leads)
+			.where(sql`${leads.unsubscribed} = 1`)
+			.get();
+
 		const stats = {
 			TOTAL: 0,
 			PENDING: 0,
@@ -112,6 +144,7 @@ export class LeadService {
 			APPROVED: 0,
 			SENT: 0,
 			FAILED: 0,
+			UNSUBSCRIBED: unsubscribedResult?.count || 0,
 		};
 
 		for (const row of result) {
