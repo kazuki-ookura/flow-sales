@@ -119,103 +119,270 @@
 
   let errorLeads = $derived(fail.filter(l => l.errorLog));
 
-  // ---- Fetch ----
+  // ---- Mock Data ----
+  const MOCK_WAITING: Lead[] = [
+    {
+      id: '1',
+      email: 'tanaka@acme-tech.co.jp',
+      firstName: '田中',
+      lastName: '誠',
+      companyName: 'ACMEテクノロジー株式会社',
+      jobTitle: 'CTO',
+      website: 'https://acme-tech.co.jp',
+      personalizedEmail: `田中様\n\nはじめまして。FlowSalesの山田と申します。\n\nACMEテクノロジー様のサイトを拝見し、採用ページで「エンジニア組織を10名→30名に拡大中」との記載を確認しました。急成長フェーズにおいて、新規顧客へのアウトリーチをスケールさせることが急務になっているのではないでしょうか。\n\nFlowSalesは、Google Mapsのデータを起点に見込み顧客のWebサイトをAIが自動分析し、パーソナライズされた営業メールを自動生成・送信するツールです。エンジニアリソースを一切使わずに、月間500件以上のアウトリーチが可能になります。\n\n15分ほどデモの機会をいただけますでしょうか？\n\nよろしくお願いいたします。\n山田 太郎 | FlowSales`,
+      researchSummary: '採用ページに「エンジニア組織10名→30名拡大中」と記載あり。急成長フェーズで営業リソースが不足している可能性が高い。技術スタックはReact・Node.js・AWSを中心に構成。SaaS系B2Bプロダクトを展開しており、新規顧客獲得が収益に直結するビジネスモデル。',
+      techStack: 'React, Node.js, AWS, TypeScript',
+      status: 'WAITING_APPROVAL',
+      approvalStatus: null,
+      sentAt: null,
+      errorLog: null,
+      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      updatedAt: new Date(Date.now() - 1800000).toISOString(),
+    },
+    {
+      id: '2',
+      email: 'sato@bloom-retail.jp',
+      firstName: '佐藤',
+      lastName: '花',
+      companyName: 'Bloom Retail Japan',
+      jobTitle: 'Head of Marketing',
+      website: 'https://bloom-retail.jp',
+      personalizedEmail: `佐藤様\n\nFlowSalesの山田です。突然のご連絡失礼いたします。\n\nBloom Retail Japan様のInstagramを拝見し、月次で新商品のキャンペーンを精力的に展開されているのを確認しました。一方で、BtoBの卸先や法人顧客への営業活動はまだ手が回っていないのではと感じました。\n\n弊社ツールを活用いただくことで、近隣の小売店や飲食店オーナーへの一斉アウトリーチを自動化し、月間300件以上の法人リードへアプローチが可能です。\n\nご興味があればぜひ一度お話しさせてください。\n\n山田 太郎 | FlowSales`,
+      researchSummary: 'Instagram・公式サイトに月次キャンペーンの記載が多数。BtoC注力でBtoB営業リソースが薄い可能性。ショッピファイ利用のECサイト運営中。地域密着型の卸・法人営業チャネルの開拓余地が大きい。',
+      techStack: 'Shopify, Instagram API, Google Analytics',
+      status: 'WAITING_APPROVAL',
+      approvalStatus: null,
+      sentAt: null,
+      errorLog: null,
+      createdAt: new Date(Date.now() - 7200000).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000).toISOString(),
+    },
+    {
+      id: '3',
+      email: 'yamamoto@legal-hub.jp',
+      firstName: '山本',
+      lastName: '健二',
+      companyName: '法律事務所ハブ',
+      jobTitle: '代表弁護士',
+      website: 'https://legal-hub.jp',
+      personalizedEmail: `山本先生\n\nFlowSalesの山田と申します。\n\n法律事務所ハブ様のサイトを拝見し、「中小企業向け顧問契約」を主力サービスとされているのを確認しました。潜在顧客である中小企業経営者へのアウトリーチを組織的に行うことで、顧問契約の受注を大幅に増やせる可能性があります。\n\n弊社のAI SDRツールにより、近隣エリアの中小企業経営者への個別パーソナライズメールを自動送信できます。月額費用は弁護士時間1時間分以下です。\n\n15分のオンラインデモをご提案できれば幸いです。\n\n山田 太郎 | FlowSales`,
+      researchSummary: '中小企業向け顧問契約が主力。士業は既存顧客からの紹介依存が高く、アウトバウンド営業が弱点になりやすい。サイトに「問い合わせ増加中」のバナーがなく、積極的なリード獲得施策がないと推定。',
+      techStack: 'WordPress, Google My Business',
+      status: 'WAITING_APPROVAL',
+      approvalStatus: null,
+      sentAt: null,
+      errorLog: null,
+      createdAt: new Date(Date.now() - 10800000).toISOString(),
+      updatedAt: new Date(Date.now() - 7200000).toISOString(),
+    },
+  ];
+
+  const MOCK_SENT: Lead[] = [
+    {
+      id: '10',
+      email: 'kobayashi@nextwave.jp',
+      firstName: '小林',
+      lastName: '優',
+      companyName: 'NextWave株式会社',
+      jobTitle: 'CEO',
+      website: 'https://nextwave.jp',
+      personalizedEmail: null,
+      researchSummary: null,
+      techStack: 'Vue.js, Laravel, GCP',
+      status: 'SENT',
+      approvalStatus: 'APPROVED',
+      sentAt: new Date(Date.now() - 86400000).toISOString(),
+      errorLog: null,
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      id: '11',
+      email: 'ito@greenleaf-consulting.jp',
+      firstName: '伊藤',
+      lastName: '真一',
+      companyName: 'グリーンリーフコンサルティング',
+      jobTitle: 'マネージャー',
+      website: 'https://greenleaf-consulting.jp',
+      personalizedEmail: null,
+      researchSummary: null,
+      techStack: 'Salesforce, HubSpot',
+      status: 'SENT',
+      approvalStatus: 'APPROVED',
+      sentAt: new Date(Date.now() - 172800000).toISOString(),
+      errorLog: null,
+      createdAt: new Date(Date.now() - 259200000).toISOString(),
+      updatedAt: new Date(Date.now() - 172800000).toISOString(),
+    },
+  ];
+
+  const MOCK_FAILED: Lead[] = [
+    {
+      id: '20',
+      email: 'info@blocked-site.jp',
+      firstName: null,
+      lastName: null,
+      companyName: 'ブロックドサイト株式会社',
+      jobTitle: null,
+      website: 'https://blocked-site.jp',
+      personalizedEmail: null,
+      researchSummary: null,
+      techStack: null,
+      status: 'FAILED',
+      approvalStatus: null,
+      sentAt: null,
+      errorLog: 'Failed to crawl website: 403 Forbidden. The website blocks automated crawlers. robots.txt disallows all user agents.',
+      createdAt: new Date(Date.now() - 43200000).toISOString(),
+      updatedAt: new Date(Date.now() - 21600000).toISOString(),
+    },
+    {
+      id: '21',
+      email: 'contact@rate-limited.co.jp',
+      firstName: '中村',
+      lastName: '理恵',
+      companyName: '株式会社レートリミテッド',
+      jobTitle: '営業部長',
+      website: 'https://rate-limited.co.jp',
+      personalizedEmail: null,
+      researchSummary: null,
+      techStack: null,
+      status: 'FAILED',
+      approvalStatus: null,
+      sentAt: null,
+      errorLog: 'Anthropic API rate limit exceeded: 429 Too Many Requests. Retry after 60 seconds. Current quota: 100k tokens/min.',
+      createdAt: new Date(Date.now() - 21600000).toISOString(),
+      updatedAt: new Date(Date.now() - 10800000).toISOString(),
+    },
+  ];
+
+  const MOCK_IN_PROGRESS: Lead[] = [
+    {
+      id: '30',
+      email: 'hello@startup-xyz.jp',
+      firstName: '鈴木',
+      lastName: '拓海',
+      companyName: 'スタートアップXYZ',
+      jobTitle: 'COO',
+      website: 'https://startup-xyz.jp',
+      personalizedEmail: null,
+      researchSummary: null,
+      techStack: null,
+      status: 'RESEARCHED',
+      approvalStatus: null,
+      sentAt: null,
+      errorLog: null,
+      createdAt: new Date(Date.now() - 1800000).toISOString(),
+      updatedAt: new Date(Date.now() - 900000).toISOString(),
+    },
+    {
+      id: '31',
+      email: 'info@mediapro.jp',
+      firstName: null,
+      lastName: null,
+      companyName: 'メディアプロ株式会社',
+      jobTitle: null,
+      website: 'https://mediapro.jp',
+      personalizedEmail: null,
+      researchSummary: null,
+      techStack: null,
+      status: 'PENDING',
+      approvalStatus: null,
+      sentAt: null,
+      errorLog: null,
+      createdAt: new Date(Date.now() - 600000).toISOString(),
+      updatedAt: new Date(Date.now() - 600000).toISOString(),
+    },
+    {
+      id: '32',
+      email: 'ceo@digitrans.co.jp',
+      firstName: '加藤',
+      lastName: '亮',
+      companyName: 'デジトランス株式会社',
+      jobTitle: 'CEO',
+      website: 'https://digitrans.co.jp',
+      personalizedEmail: '加藤様\n\nご連絡ありがとうございます...',
+      researchSummary: 'DX支援事業を展開。急成長中。',
+      techStack: 'React, Python, Azure',
+      status: 'PERSONALIZED',
+      approvalStatus: null,
+      sentAt: null,
+      errorLog: null,
+      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      updatedAt: new Date(Date.now() - 1200000).toISOString(),
+    },
+  ];
+
+  const MOCK_STATS: Stats = {
+    TOTAL: MOCK_WAITING.length + MOCK_SENT.length + MOCK_FAILED.length + MOCK_IN_PROGRESS.length,
+    PENDING: 1,
+    RESEARCHED: 1,
+    PERSONALIZED: 1,
+    WAITING_APPROVAL: MOCK_WAITING.length,
+    APPROVED: MOCK_SENT.length,
+    SENT: MOCK_SENT.length,
+    FAILED: MOCK_FAILED.length,
+  };
+
+  // ---- Fetch (uses mock data in demo mode) ----
   async function fetchData() {
-    try {
-      loading = true;
-      const res = await fetch('/api/data');
-      if (!res.ok) throw new Error('Failed to fetch data');
-      const data = await res.json();
-      waiting = data.waiting ?? [];
-      sent = data.sent ?? [];
-      fail = data.fail ?? [];
-      globalStats = data.globalStats;
-      sentToday = data.sentToday ?? 0;
-      allLeads = [...(data.waiting ?? []), ...(data.sent ?? []), ...(data.fail ?? []), ...(data.inProgress ?? [])];
-      error = null;
-    } catch (e: any) {
-      error = e.message;
-    } finally {
-      loading = false;
-    }
+    loading = true;
+    await new Promise(r => setTimeout(r, 400));
+    waiting = MOCK_WAITING;
+    sent = MOCK_SENT;
+    fail = MOCK_FAILED;
+    globalStats = MOCK_STATS;
+    sentToday = 3;
+    allLeads = [...MOCK_WAITING, ...MOCK_SENT, ...MOCK_FAILED, ...MOCK_IN_PROGRESS];
+    error = null;
+    loading = false;
   }
 
   async function fetchSettings() {
-    try {
-      const res = await fetch('/api/settings');
-      if (res.ok) {
-        const data = await res.json();
-        excludedDomains = data.excludedDomains ?? '';
-        senderName = data.senderName ?? '';
-        senderTitle = data.senderTitle ?? '';
-        productName = data.productName ?? '';
-        productDescription = data.productDescription ?? '';
-      }
-    } catch (e) { /* noop */ }
+    senderName = '山田 太郎';
+    senderTitle = 'Head of Growth';
+    productName = 'FlowSales';
+    productDescription = 'Google MapsのデータからリードをAIが自動分析し、パーソナライズ営業メールを生成・送信するAI-SDR SaaS。';
+    excludedDomains = 'gmail.com, yahoo.co.jp, hotmail.com';
   }
 
   async function saveSettings() {
     savingSettings = true;
     settingsSaved = false;
-    try {
-      const res = await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ excludedDomains, senderName, senderTitle, productName, productDescription })
-      });
-      if (res.ok) {
-        settingsSaved = true;
-        setTimeout(() => (settingsSaved = false), 2500);
-      }
-    } catch (e) { /* noop */ }
-    finally { savingSettings = false; }
+    await new Promise(r => setTimeout(r, 800));
+    settingsSaved = true;
+    savingSettings = false;
+    setTimeout(() => (settingsSaved = false), 2500);
   }
 
   async function runWorkflowNow() {
     workflowRunning = true;
-    try {
-      await fetch('/run-now');
-      await fetchData();
-    } catch (e) { /* noop */ }
-    finally { setTimeout(() => (workflowRunning = false), 1500); }
+    await new Promise(r => setTimeout(r, 1500));
+    workflowRunning = false;
   }
 
   async function handleApprove(lead: Lead) {
     processingAction = true;
-    try {
-      const body = editContent ? JSON.stringify({ content: editContent }) : undefined;
-      const res = await fetch('/approve/' + lead.id, {
-        method: 'POST',
-        headers: body ? { 'Content-Type': 'application/json' } : {},
-        body
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        showModal = false;
-        await fetchData();
-      }
-    } catch (e) { /* noop */ }
-    finally { processingAction = false; }
+    await new Promise(r => setTimeout(r, 900));
+    waiting = waiting.filter(l => l.id !== lead.id);
+    sent = [{ ...lead, status: 'SENT', sentAt: new Date().toISOString() }, ...sent];
+    globalStats = { ...MOCK_STATS, SENT: sent.length, WAITING_APPROVAL: waiting.length };
+    allLeads = [...waiting, ...sent, ...fail, ...MOCK_IN_PROGRESS];
+    showModal = false;
+    processingAction = false;
   }
 
   async function handleReject(lead: Lead) {
     processingAction = true;
-    try {
-      const res = await fetch('/reject/' + lead.id, { method: 'POST' });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        showModal = false;
-        await fetchData();
-      }
-    } catch (e) { /* noop */ }
-    finally { processingAction = false; }
+    await new Promise(r => setTimeout(r, 700));
+    waiting = waiting.filter(l => l.id !== lead.id);
+    allLeads = [...waiting, ...sent, ...fail, ...MOCK_IN_PROGRESS];
+    showModal = false;
+    processingAction = false;
   }
 
   async function retryLead(lead: Lead) {
-    try {
-      await fetch('/approve/' + lead.id, { method: 'POST' });
-      await fetchData();
-    } catch (e) { /* noop */ }
+    fail = fail.filter(l => l.id !== lead.id);
+    allLeads = [...waiting, ...sent, ...fail, ...MOCK_IN_PROGRESS];
   }
 
   function openLeadModal(lead: Lead, mode: 'approve' | 'reject' | 'view' | 'edit') {
@@ -228,8 +395,6 @@
   onMount(() => {
     fetchData();
     fetchSettings();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
   });
 
   // ---- Helpers ----
