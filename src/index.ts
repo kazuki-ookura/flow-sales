@@ -79,16 +79,24 @@ app.get("/run-now", async (c) => {
  * ダッシュボード用データAPI
  */
 app.get("/api/data", async (c) => {
-	const waiting = await LeadService.getLeadsByStatus("WAITING_APPROVAL");
-	const fail = await LeadService.getLeadsByStatus("FAILED");
-	const sent = await LeadService.getLeadsByStatus("SENT");
-	const globalStats = await LeadService.getGlobalStats();
-	const sentToday = await LeadService.getSentCountToday();
+	const [waiting, fail, sent, pending, researched, personalized, globalStats, sentToday] = await Promise.all([
+		LeadService.getLeadsByStatus("WAITING_APPROVAL"),
+		LeadService.getLeadsByStatus("FAILED"),
+		LeadService.getLeadsByStatus("SENT"),
+		LeadService.getLeadsByStatus("PENDING"),
+		LeadService.getLeadsByStatus("RESEARCHED"),
+		LeadService.getLeadsByStatus("PERSONALIZED"),
+		LeadService.getGlobalStats(),
+		LeadService.getSentCountToday(),
+	]);
+
+	const inProgress = [...pending, ...researched, ...personalized];
 
 	return c.json({
 		waiting,
 		fail,
 		sent,
+		inProgress,
 		globalStats,
 		sentToday,
 	});
@@ -98,13 +106,31 @@ app.get("/api/data", async (c) => {
  * 設定取得・更新用API
  */
 app.get("/api/settings", async (c) => {
-	const excludedDomains = await SettingsService.getSetting("EXCLUDED_DOMAINS");
-	return c.json({ excludedDomains: excludedDomains || "" });
+	const [excludedDomains, senderName, senderTitle, productName, productDescription] = await Promise.all([
+		SettingsService.getSetting("EXCLUDED_DOMAINS"),
+		SettingsService.getSetting("SDR_SENDER_NAME"),
+		SettingsService.getSetting("SDR_SENDER_TITLE"),
+		SettingsService.getSetting("SDR_PRODUCT_NAME"),
+		SettingsService.getSetting("SDR_PRODUCT_DESCRIPTION"),
+	]);
+	return c.json({
+		excludedDomains: excludedDomains || "",
+		senderName: senderName || process.env.SDR_SENDER_NAME || "",
+		senderTitle: senderTitle || process.env.SDR_SENDER_TITLE || "",
+		productName: productName || process.env.SDR_PRODUCT_NAME || "",
+		productDescription: productDescription || process.env.SDR_PRODUCT_DESCRIPTION || "",
+	});
 });
 
 app.post("/api/settings", async (c) => {
-	const { excludedDomains } = await c.req.json();
-	await SettingsService.updateSetting("EXCLUDED_DOMAINS", excludedDomains);
+	const { excludedDomains, senderName, senderTitle, productName, productDescription } = await c.req.json();
+	await Promise.all([
+		SettingsService.updateSetting("EXCLUDED_DOMAINS", excludedDomains ?? ""),
+		senderName !== undefined ? SettingsService.updateSetting("SDR_SENDER_NAME", senderName) : Promise.resolve(),
+		senderTitle !== undefined ? SettingsService.updateSetting("SDR_SENDER_TITLE", senderTitle) : Promise.resolve(),
+		productName !== undefined ? SettingsService.updateSetting("SDR_PRODUCT_NAME", productName) : Promise.resolve(),
+		productDescription !== undefined ? SettingsService.updateSetting("SDR_PRODUCT_DESCRIPTION", productDescription) : Promise.resolve(),
+	]);
 	return c.json({ success: true });
 });
 
